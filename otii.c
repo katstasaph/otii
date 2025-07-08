@@ -471,6 +471,7 @@
 // fun_4aacfb ==> lockAndGetDataWrapper
 // fun_4a6742 ==> unlockDataSection
 // fun_4aad50 ==> unlockDataSectionWrapper
+// fun_4ab3e2 ==> strcmpWrapper
 // fun_4a6a3d ==> globalLockOrWire
 // fun_4a6c5f ==> isGlobalMemoryObjectValid
 // fun_4a67c0 ==> checkGlobalFlags
@@ -25189,7 +25190,8 @@ void fun_4aac93(void** ecx) {
     return;
 }
 
-signed char fun_4ab3e2(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10, void** a11, void** a12, void** a13, void** a14) {
+// unlocks data, calls strcmp, locks data, returns the result. used on glossary search so probably the distinction is where input comes from?
+signed char strcmpWrapper(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10, void** a11, void** a12, void** a13, void** a14) {
     void** eax15;
     void** eax16;
     void** eax17;
@@ -25200,34 +25202,34 @@ signed char fun_4ab3e2(void** ecx, void** a2, void** a3, void** a4, void** a5, v
     void** v22;
     void** ebp23;
     uint32_t eax24;
-    signed char v25;
+    signed char areStringsDifferent;
     void** eax26;
     void** eax27;
     int32_t ecx28;
-    signed char al29;
+    signed char stringsEqual;
 
     eax15 = *reinterpret_cast<void***>(a2);
     eax16 = reinterpret_cast<void**>(*reinterpret_cast<void***>(eax15 + 4)(a2));
     eax17 = *reinterpret_cast<void***>(a3);
     eax18 = reinterpret_cast<void**>(*reinterpret_cast<void***>(eax17 + 4)(a3));
     eax24 = strcmp(a3, eax16, eax18, edi19, esi20, ebx21, v22, eax16, eax18, ebp23, __return_address(), a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
-    if (eax24) {
-        v25 = 0;
+    if (eax24) { // strcmp returns 0 if strings are equal...
+        areStringsDifferent = 0; // which means the values now get reversed
     } else {
-        v25 = 1;
+        areStringsDifferent = 1; // probably because we don't care about strcmp's -1 vs. 1 distinction?
     }
     eax26 = *reinterpret_cast<void***>(a2);
     *reinterpret_cast<void***>(eax26 + 8)(a2);
     eax27 = *reinterpret_cast<void***>(a3);
     *reinterpret_cast<void***>(eax27 + 8)(a3);
     ecx28 = 0;
-    *reinterpret_cast<signed char*>(&ecx28) = v25;
-    if (ecx28) {
-        al29 = 0;
+    *reinterpret_cast<signed char*>(&ecx28) = areStringsDifferent;
+    if (ecx28) { // unreverse the values
+        stringsEqual = 0;
     } else {
-        al29 = 1;
+        stringsEqual = 1;
     }
-    return al29;
+    return stringsEqual;
 }
 
 // capitalizes string, I am pretty sure in place
@@ -26353,14 +26355,14 @@ void** initializePartySimulationData(void** ecx, void** a2) {
             if (!v21) {
                 v22 = reinterpret_cast<void**>(0);
             } else { // the order of arguments here seems a bit wonky, refer to the main initializePartyMemberObject function for a better idea of what these are
-                v23 = v15;
+                v23 = v15; // these do not appear to be birth month/date like in quick start
                 v24 = v14;
                 edx25 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(a2 + 18));
                 ecx26 = *reinterpret_cast<void***>(a2 + 18);
                 partyMemberName = getAndStoreString(ecx26, v24, v23, 0, 0); 
                 eax28 = v13;
                 eax28 = *reinterpret_cast<void***>(eax28 + 0x78);
-                eax29 = initializePartyMemberObject(v21, eax28, partyMemberName, v24, v23, 0, 0); 
+                eax29 = initializePartyMemberObject(v21, eax28, partyMemberName, v24, v23, 0, 0); // extra arguments not included?
                 v22 = eax29;
             }
             *reinterpret_cast<void***>(reinterpret_cast<uint32_t>(v13 + reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v13 + 0x78)) * 4) + 96) = v22;
@@ -26384,7 +26386,7 @@ void** initializePartySimulationData(void** ecx, void** a2) {
             ecx49 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(ebp4) + 0xffffffc4);
             appendStringLengthCharsWrapper(ecx49, "Conestoga wagon", v11, v9, v7, v30, v48, v13, v54, v55, v56, v57);
         } else {
-            if (v48 == 3) {
+            if (v48 == 3) { // Not actually used ofc
                 ecx49 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(ebp4) + 0xffffffc4);
                 appendStringLengthCharsWrapper(ecx49, "handcart", v11, v9, v7, v30, v48, v13, v58, v59, v60, v61);
             } else {
@@ -26845,6 +26847,7 @@ void** fun_4773d0(void** ecx, void** a2, void** a3, void** a4) {
     return ecx;
 }
 
+// some kind of bulk destructor?
 void fun_4c2d40(void** ecx) {
     void** v2;
     void** eax3;
@@ -32214,7 +32217,7 @@ void** rollForMiscEvents(void** ecx) {
     void** v289;
     void** v290;
     void** v291;
-    void** v292;
+    void** weakestAnimalType;
     void** v293;
     void** eax294;
     void** v295;
@@ -32727,13 +32730,13 @@ void** rollForMiscEvents(void** ecx) {
     if (!eax284) 
         goto addr_462751_130;
     *reinterpret_cast<signed char*>(&v285) = 0;
-    v286 = reinterpret_cast<void**>(2);
+    v286 = reinterpret_cast<void**>(2); // default: mule
     v287 = reinterpret_cast<void**>(2);
     v288 = reinterpret_cast<void**>(2);
     v289 = reinterpret_cast<void**>(2);
     v290 = reinterpret_cast<void**>(2);
     v291 = reinterpret_cast<void**>(2);
-    v292 = reinterpret_cast<void**>(1); // weakest animal type; default: oxen
+    weakestAnimalType = reinterpret_cast<void**>(1); // default: oxen
     if (*reinterpret_cast<void***>(*reinterpret_cast<void***>(eax8 + 0xc20) + 92)) 
         goto addr_4621a3_133;
     v293 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(eax8 + 0xc20) + 12); // Animals
@@ -32751,10 +32754,10 @@ void** rollForMiscEvents(void** ecx) {
         v289 = eax299;
         eax300 = fun_482bf5(v293);
         v290 = eax300;
-        eax301 = fun_482d5d(v293);
+        eax301 = fun_482d5d(v293); // used in animal stepping in hole chance
         v291 = eax301;
         eax302 = getWeakestAnimalTypeInParty(v293); // 1 for ox, 2 for mule, 3 for horses
-        v292 = eax302;
+        weakestAnimalType = eax302;
     }
     eax303 = findRecentEventWithID(eax27, 2);
     if (eax303 || ((eax304 = findRecentEventWithID(eax27, 0), !!eax304) || ((eax305 = findRecentEventWithID(eax27, 22), !!eax305) || ((eax306 = findRecentEventWithID(eax27, 4), !!eax306) || (eax307 = findRecentEventWithID(eax27, 3), !!eax307))))) { // Has a blizzard, severe thunderstorm, hailstorm, heavy fog, or duststorm happened recently
@@ -32884,7 +32887,7 @@ void** rollForMiscEvents(void** ecx) {
     if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(&currentMonth))) == 7 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(&currentDay))) == 4) {
         fun_4a1d82(eax27, 44, 0, 0, 0, 0, 0xff, edi4, esi5, ebx6, v176); // Independence Day event
     }
-    storeStringToNewlyAllocatedMemory(reinterpret_cast<int32_t>(esp2) + 0xffffffc4, "ox", edi4, esi5, ebx6, v176, ecx, v359, v360, v361, v362, v281, eax276, v363, v290, v286, v289, v287, v285, v292, v295, v288, v291, v293, v271, v88, v122, v42, v279, eax8);
+    storeStringToNewlyAllocatedMemory(reinterpret_cast<int32_t>(esp2) + 0xffffffc4, "ox", edi4, esi5, ebx6, v176, ecx, v359, v360, v361, v362, v281, eax276, v363, v290, v286, v289, v287, v285, weakestAnimalType, v295, v288, v291, v293, v271, v88, v122, v42, v279, eax8);
     ecx364 = *reinterpret_cast<void***>(eax8 + 0xc20);
     eax366 = fun_42329f(ecx364, reinterpret_cast<int32_t>(esp2) + 0xffffffc4, edi4, esi5, ebx6, v176, ecx, v365); // Do we have any oxen
     if (!eax366) {
@@ -33068,11 +33071,12 @@ void** rollForMiscEvents(void** ecx) {
     if (v42 == 4 || (v42 == 5 || (v42 == 1 || reinterpret_cast<int1_t>(v42 == 2)))) { // Terrain type deep sand, uphill, rough, or muddy? (strenuous on animals)
         v342 = reinterpret_cast<int16_t>(v342 + 1);
     }
-    if (reinterpret_cast<int1_t>(v292 == 3) && (eax409 = 0, *reinterpret_cast<signed char*>(&eax409) = *reinterpret_cast<signed char*>(&v295), !eax409)) { // v295 is hay/oats
+	// 
+    if (reinterpret_cast<int1_t>(weakestAnimalType == 3) && (eax409 = 0, *reinterpret_cast<signed char*>(&eax409) = *reinterpret_cast<signed char*>(&v295), !eax409)) { // v295 is hay/oats
         eax410 = v342 + 10; // Horses tire the most easily without feed (they don't tell you "animals exhausted" may mean they're starving)
         v342 = *reinterpret_cast<int16_t*>(&eax410);
     }
-    if (reinterpret_cast<int1_t>(v292 == 2) && (eax411 = 0, *reinterpret_cast<signed char*>(&eax411) = *reinterpret_cast<signed char*>(&v295), !eax411)) {
+    if (reinterpret_cast<int1_t>(weakestAnimalType == 2) && (eax411 = 0, *reinterpret_cast<signed char*>(&eax411) = *reinterpret_cast<signed char*>(&v295), !eax411)) {
         eax412 = v342 + 5; // Mules less so
         v342 = *reinterpret_cast<int16_t*>(&eax412);
     }
@@ -33083,6 +33087,7 @@ void** rollForMiscEvents(void** ecx) {
         eax422 = v342 + 20;
         v342 = *reinterpret_cast<int16_t*>(&eax422);
     }
+	// Animals more easily exhausted in extreme heat/cold
     eax423 = getTemperatureHigh(v9, 0, edi4, esi5, ebx6, v176, ecx);
     if (reinterpret_cast<signed char>(eax423) > reinterpret_cast<signed char>(95)) {
         eax424 = *reinterpret_cast<int16_t*>(&v286);
@@ -33095,6 +33100,7 @@ void** rollForMiscEvents(void** ecx) {
         eax428 = eax427 + eax427 * 2 + v342;
         v342 = *reinterpret_cast<int16_t*>(&eax428);
     }
+	// Animals get exhausted more easily if we're traveling more than 8 miles/day
     if (*reinterpret_cast<void***>(eax8 + 0xc0e)) {
         eax429 = *reinterpret_cast<int16_t*>(&v288);
         eax430 = eax429 + eax429 * 4 + v342;
@@ -34937,6 +34943,7 @@ void** fun_482d5d(void** ecx) {
 }
 
 // Returns the "ID" of the weakest animal type in party, 1 ox, 2 mule, 3 horse
+// To test: is the "weakest animal" the one in the majority, or say if you have 1 horse and 9 oxen it's horse?
 void** getWeakestAnimalTypeInParty(void** ecx) {
     int1_t zf2;
     void** eax3;
@@ -36654,7 +36661,7 @@ void** loadCharacterCreationWindow(void** ecx) {
     ecx95 = v12;
     *reinterpret_cast<void***>(ecx95 + 24) = v77;
     v96 = 0;
-    while (eax97 = v96, eax98 = eax97 + eax97, !!*reinterpret_cast<int32_t*>(eax98 + eax98 * 8 + 0x501600)) { // iterate until we run out of stuff in the memory ocation
+    while (eax97 = v96, eax98 = eax97 + eax97, !!*reinterpret_cast<int32_t*>(eax98 + eax98 * 8 + 0x501600)) { // iterate until we run out of stuff in the memory location
         eax99 = reinterpret_cast<void*>(static_cast<int32_t>(v96));
         eax100 = reinterpret_cast<void*>(reinterpret_cast<int32_t>(eax99) + reinterpret_cast<int32_t>(eax99));
         v101 = *reinterpret_cast<void***>(reinterpret_cast<unsigned char>(reinterpret_cast<int32_t>(eax100) + reinterpret_cast<int32_t>(eax100) * 8 + 0x501600) + 10); // are these coords?
@@ -36907,7 +36914,7 @@ void** loadCharacterCreationWindow(void** ecx) {
     }
     v431 = v428;
     v432 = 0;
-    while (static_cast<int32_t>(v432) < 5) {
+    while (static_cast<int32_t>(v432) < 5) { // Up to 5 additional party members
         v433 = 0;
         while (eax434 = 0, *reinterpret_cast<signed char*>(&eax434) = v433, !eax434) {
             v435 = reinterpret_cast<void**>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v431 + 34)) - 1);
@@ -36946,13 +36953,13 @@ void** loadCharacterCreationWindow(void** ecx) {
         }
         v450 = v448;
         v451 = 0;
-        while (static_cast<int32_t>(v451) < 25) { // Getting options for age
+        while (static_cast<int32_t>(v451) < 25) { // Adjusting age based on random base rolls below.
             if (static_cast<int32_t>(v451) >= 16) { 
                 eax452 = v451;
-                eax453 = eax452 + eax452 * 4 - 75 + 20; // The math works out to 5-year increments after age 20
+                eax453 = eax452 + eax452 * 4 - 75 + 20; // Scale age: base + ((base*4) - 75 + 20). This results in a multiple of 5; e.g., 19 => 40
                 v454 = *reinterpret_cast<int16_t*>(&eax453);
             } else {
-                eax455 = v451 + 5; // For the first few years print ages 5 to 20
+                eax455 = v451 + 5; // If you're 15 or under, add 5 years to that age
                 v454 = *reinterpret_cast<int16_t*>(&eax455);
             }
             v456 = reinterpret_cast<void**>(static_cast<int32_t>(v454));
@@ -36975,15 +36982,15 @@ void** loadCharacterCreationWindow(void** ecx) {
         edx462 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(v12 + 24));
         ecx463 = *reinterpret_cast<void***>(v12 + 24);
         fun_44c34e(ecx463, v460, v444, v438, v423, 2, 1, v402, v373, v353, v336, v306, v273, v237, "A trail guide", "An adventurer", "A Greenhorn", v194, v176, v10, v8, v6);
-        if (static_cast<int32_t>(v432) >= 2) {
-            if (static_cast<int32_t>(v432) >= 4) {
+        if (static_cast<int32_t>(v432) >= 2) { // Determining ages by party member position; these ages will later be scaled
+            if (static_cast<int32_t>(v432) >= 4) { // Base age for party members 5 and 6 (potential members, at this point) is 18 to 24
                 eax464 = boundedRand(ecx463, 18, 24, 1, v460, v444, v438, v423, 2, ecx463, 18, 24, 1, v460, v444, v438, v423, 2);
                 *reinterpret_cast<int16_t*>(&v465) = *reinterpret_cast<int16_t*>(&eax464);
-            } else {
+            } else { // Base age for party members 3 and 4 is between 4-17
                 eax466 = boundedRand(ecx463, 4, 17, 1, v460, v444, v438, v423, 2, ecx463, 4, 17, 1, v460, v444, v438, v423, 2);
                 *reinterpret_cast<int16_t*>(&v465) = *reinterpret_cast<int16_t*>(&eax466);
             }
-        } else {
+        } else { // Base age for party members 1 and 2 is between 15 and 20
             eax467 = boundedRand(ecx463, 15, 20, 1, v460, v444, v438, v423, 2, ecx463, 15, 20, 1, v460, v444, v438, v423, 2);
             *reinterpret_cast<int16_t*>(&v465) = *reinterpret_cast<int16_t*>(&eax467);
         }
@@ -41925,21 +41932,21 @@ void** initializeQuickStartParty(void** ecx, int32_t a2, void** a3, void** a4, v
     }
     *reinterpret_cast<int16_t*>(&v95) = 0;
     while (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v95)) < 6) { // up to 6 party members; now we are giving people ages
-        ecx96 = reinterpret_cast<void**>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v95)));
+        ecx96 = reinterpret_cast<void**>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v95))); // not sure whether these get scaled too like New Game
         if (reinterpret_cast<signed char>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v16 + 0x78)))) <= reinterpret_cast<signed char>(ecx96)) {
             ecx82 = v16;
             *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(ecx82 + *reinterpret_cast<int16_t*>(&v95) * 4) + 96) = 0;
         } else {
-            if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v95)) >= 2) { // quick start, unlike regular character creation, gives you a ton of kids.
+            if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v95)) >= 2) {
                 if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v95)) >= 4) {
-                    eax98 = boundedRand(ecx96, 18, 24, 1, v56, v14, v12, v10, v97); // party members 2-3 are ages 18-24
+                    eax98 = boundedRand(ecx96, 18, 24, 1, v56, v14, v12, v10, v97); // party members 5 and 6 are (base?) ages 18-24
                     *reinterpret_cast<int16_t*>(&v99) = *reinterpret_cast<int16_t*>(&eax98);
                 } else {
-                    eax101 = boundedRand(ecx96, 4, 17, 1, v56, v14, v12, v10, v100); // party members 4, 5, 6 are ages 4-17
+                    eax101 = boundedRand(ecx96, 4, 17, 1, v56, v14, v12, v10, v100); // party members 3 and 4 are (base?) ages 4-17
                     *reinterpret_cast<int16_t*>(&v99) = *reinterpret_cast<int16_t*>(&eax101);
                 }
             } else {
-                eax103 = boundedRand(ecx96, 15, 20, 1, v56, v14, v12, v10, v102); // you and party member 1 are ages 15-20
+                eax103 = boundedRand(ecx96, 15, 20, 1, v56, v14, v12, v10, v102); // you and party member 2 are (base?) ages 15-20
                 *reinterpret_cast<int16_t*>(&v99) = *reinterpret_cast<int16_t*>(&eax103);
             }
             eax105 = boundedRand(ecx96, 1, 12, 1, v56, v14, v12, v10, v104); // FUN FACT: you get a birthday in quick start, and not in regular character creation.
@@ -41978,7 +41985,7 @@ void** initializeQuickStartParty(void** ecx, int32_t a2, void** a3, void** a4, v
     *reinterpret_cast<void***>(v16 + 0x86) = ax125; // Score multiplier
     *reinterpret_cast<void***>(v16 + 0x88) = reinterpret_cast<void**>(0x78);
     ecx126 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(ebp7) + 0xffffff8c);
-    storeStringToNewlyAllocatedMemory(ecx126, "large farmwagon", v56, v14, v12, v10, v123, v16, v127, v128, v129, v130, v131, v132, v113, v112, v92, v93, v65, v64, v59, v60, v33, v32, v24, v23, otherPartyMember, newNameIsUnique, v29, v133);
+    storeStringToNewlyAllocatedMemory(ecx126, "large farmwagon", v56, v14, v12, v10, v123, v16, v127, v128, v129, v130, v131, v132, v113, v112, v92, v93, v65, v64, v59, v60, v33, v32, v24, v23, otherPartyMember, newNameIsUnique, v29, v133); // You always get a large farmwagon
     eax134 = operator new(ecx126, 22, v56, v14, v12, v10, v123);
     if (!eax134) {
         v135 = reinterpret_cast<void**>(0);
@@ -100432,10 +100439,10 @@ void initializeQuickStartGameSettings(void** ecx, int32_t a2, int32_t a3, int32_
         fun_43b480(v162, 1, v183, v153, v12, v10, v8);
     }
     ecx188 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(v14 + 40));
-    ax191 = howManyPartyMembers(ecx188, 1, v183, v153, v12, v10, v8, v189, v190, v14);
+    ax191 = howManyPartyMembers(ecx188, 1, v183, v153, v12, v10, v8, v189, v190, v14); 
     v192 = reinterpret_cast<void**>(reinterpret_cast<int16_t>(ax191) - 1);
     v193 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(esp5) + 0xffffff48);
-    sprintf(ecx188, v193, "%d", v192, v183, v153, v12, v10, v8, v194, v195, v14, v196, v197, v198, v199, v200, ecx188, v193, "%d", v192, v183, v153, v12, v10, v8, v201, v202, v14, v203, v204, v205, v206, v207);
+    sprintf(ecx188, v193, "%d", v192, v183, v153, v12, v10, v8, v194, v195, v14, v196, v197, v198, v199, v200, ecx188, v193, "%d", v192, v183, v153, v12, v10, v8, v201, v202, v14, v203, v204, v205, v206, v207); // Fill in string for # of party members
     eax208 = operator new(ecx188, 40, v183, v153, v12, v10, v8, ecx188, 40, v183, v153, v12, v10, v8);
     if (!eax208) {
         v209 = reinterpret_cast<void**>(0);
@@ -103388,6 +103395,7 @@ int32_t getWagonTypeID(void** ecx) {
     return eax10;
 }
 
+// related to character creation/initialization it seems
 void fun_483926(void** ecx) {
     void* ebp2;
 
@@ -220378,7 +220386,7 @@ void fun_441f21() {
     if (!(al1 & 1)) {
         al2 = g504778;
         g504778 = reinterpret_cast<unsigned char>(al2 | 1);
-        fun_4aac93(0x504750);
+        fun_4aac93(0x504750); // glossary searches are stored here, is something else?
     }
     return;
 }
@@ -221774,7 +221782,7 @@ void lookupGlossarySearch(void** ecx, int16_t* a2) {
     void** v55;
     void** v56;
     void** eax57;
-    void** v58;
+    void** searchString;
     void** v59;
     void** v60;
     void** v61;
@@ -221783,7 +221791,7 @@ void lookupGlossarySearch(void** ecx, int16_t* a2) {
     void** v64;
     void** v65;
     signed char al66;
-    int32_t ecx67;
+    int32_t newSearchQuery;
     void** v68;
     void** v69;
     void** v70;
@@ -221891,21 +221899,21 @@ void lookupGlossarySearch(void** ecx, int16_t* a2) {
     ecx43 = *reinterpret_cast<void***>(v13 + 24);
     eax53 = getUISectionContents(ecx43, 1, v11, v9, v7, v13, v44, v45, v46, v47, v48, v49, v50, v51, v52);
     eax57 = getWindowTextWrapper(eax53, v11, v9, v7, v13, v54, v55, v56);
-    v58 = eax57;
-    if (!*reinterpret_cast<void***>(v58 + 32)) { // is our search empty
+    searchString = eax57;
+    if (!*reinterpret_cast<void***>(searchString + 32)) { // is our search empty
         *reinterpret_cast<void***>(v13 + 32) = reinterpret_cast<void**>(0xfffe);
         chosenGlossaryEntry = -1;
-    } else {
-        al66 = fun_4ab3e2(eax53, v58, 0x504750, v11, v9, v7, v13, v59, v60, v61, v62, v63, v64, v65);
-        ecx67 = 0;
-        *reinterpret_cast<signed char*>(&ecx67) = al66;
-        if (ecx67) {
+    } else { // don't choose a glossary entry if our search query is the same as the last one
+        al66 = strcmpWrapper(eax53, searchString, 0x504750, v11, v9, v7, v13, v59, v60, v61, v62, v63, v64, v65); // 0x504750 eventually references old search query
+        newSearchQuery = 0;
+        *reinterpret_cast<signed char*>(&newSearchQuery) = al66;
+        if (newSearchQuery) {
             chosenGlossaryEntry = -1;
         }
-        storeStringToMemory(0x504750, v58, v11, v9, v7, v13, v68, v69, v70, v71, v72, v73, v74, v75, v76, v77, v78, v79, v80, v81);
-        allcapsStringInPlace(v58, v11);
-        eax82 = *reinterpret_cast<void***>(v58);
-        eax83 = lockAndGetDataWrapper(v58);
+        storeStringToMemory(0x504750, searchString, v11, v9, v7, v13, v68, v69, v70, v71, v72, v73, v74, v75, v76, v77, v78, v79, v80, v81);
+        allcapsStringInPlace(searchString, v11);
+        eax82 = *reinterpret_cast<void***>(searchString);
+        eax83 = lockAndGetDataWrapper(searchString);
         v84 = eax83;
         eax85 = chosenGlossaryEntry;
         eax86 = eax85 + 1;
@@ -221964,12 +221972,12 @@ void lookupGlossarySearch(void** ecx, int16_t* a2) {
                 *reinterpret_cast<int16_t*>(&v102) = reinterpret_cast<int16_t>(*reinterpret_cast<int16_t*>(&v102) + 1);
             }
         }
-        eax113 = *reinterpret_cast<void***>(v58);
-        ecx114 = v58;
+        eax113 = *reinterpret_cast<void***>(searchString);
+        ecx114 = searchString;
         unlockdataSectionWrapper(ecx114);
-        if (v58) {
-            eax115 = *reinterpret_cast<void***>(v58);
-            ecx114 = v58;
+        if (searchString) { // destruct/cleanup
+            eax115 = *reinterpret_cast<void***>(searchString);
+            ecx114 = searchString;
             *reinterpret_cast<void***>(eax115)(ecx114, 1);
         }
         if (v42) {
