@@ -5557,7 +5557,7 @@ void fun_4237e1(void** ecx, void** a2, void** a3, void** a4);
 
 void** fun_4cdb0b(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8);
 
-// Adjusts health, animal health, spoilage other daily changes?
+// Adjusts health, animal health, spoilage other daily changes? a2 is always 24, maybe meaning hours?
 void fun_4849a0(void** ecx, int32_t a2) {
     void* ebp3;
     void** v4;
@@ -5727,27 +5727,27 @@ void fun_4849a0(void** ecx, int32_t a2) {
     } else {
         eax31 = loadGameSimulationData(ecx20, v8, v6, v4, v10, v30);
         v32 = eax31;
-        if (!reinterpret_cast<int1_t>(*reinterpret_cast<void***>(v32 + 0xc0e) == 1))  // slightly harm health if traveling 10 miles per day
+        if (!reinterpret_cast<int1_t>(*reinterpret_cast<void***>(v32 + 0xc0e) == 1))  // slightly harm health if traveling 10 hours per day
             goto addr_484aed_22; else 
-            goto addr_484ad6_23;
+            goto addr_484ad6_23; // (12 hours per day gets checked for later)
     }
-    addr_484c24_24:
+    addr_484c24_24: // does some adjustments to that incoming health loss number?
     v33 = 0;
     while (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0x78))) > static_cast<int32_t>(v33)) { // Loop through party members
         if ((*reinterpret_cast<struct s3**>(reinterpret_cast<uint32_t>(v10 + v33 * 4) + 96))->f26 == 2) { // Is the current party member alive
             v34 = reinterpret_cast<void**>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0xa8)) + 15); // Incoming health loss plus/minus 15, for bounds
             v35 = reinterpret_cast<void**>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0xa8)) - 15); // 
             eax37 = boundedRand(v10, v35, v34, 2, v8, v6, v4, v10, v36);
-            if (!*reinterpret_cast<void***>(v10 + 0x9c)) {
+            if (!*reinterpret_cast<void***>(v10 + 0x9c)) { 
                 v38 = 0;
             } else {
                 __asm__("cdq ");
                 __asm__("cdq ");
                 edx39 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0x9c)) % 10;
-                ecx40 = (*reinterpret_cast<struct s4**>(reinterpret_cast<uint32_t>(v10 + v33 * 4) + 96))->f18 / 10 + (edx39 + edx39 * 4) * 2 - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0xa8)); // 1/10 of their health (fairmath, probably), plus 1 for every 10 days without food, minus whatever the current health change is
-                v38 = *reinterpret_cast<int16_t*>(&ecx40);
+                ecx40 = (*reinterpret_cast<struct s4**>(reinterpret_cast<uint32_t>(v10 + v33 * 4) + 96))->f18 / 10 + (edx39 + edx39 * 4) * 2 - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0xa8)); // their current health mod 10, plus 1 for every 10 days without food, minus whatever the current health change is
+                v38 = *reinterpret_cast<int16_t*>(&ecx40); // but why?
             }
-            v41 = v38 + *reinterpret_cast<int16_t*>(&eax37);
+            v41 = v38 + *reinterpret_cast<int16_t*>(&eax37); // adjust incoming health change by above calcuation
             v42 = a2;
             ecx43 = *reinterpret_cast<void***>(reinterpret_cast<uint32_t>(v10 + v33 * 4) + 96);
             fun_4d3745(ecx43, *reinterpret_cast<int16_t*>(&v42), *reinterpret_cast<int16_t*>(&v41));
@@ -5892,7 +5892,7 @@ void fun_4849a0(void** ecx, int32_t a2) {
     eax110 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v10 + 0xa8)) + 45;
     ecx20 = v10;
     *reinterpret_cast<void***>(ecx20 + 0xa8) = *reinterpret_cast<void***>(&eax110);
-    goto addr_484aed_22;
+    goto addr_484aed_22; // Check for 12 hours per day here
 }
 
 signed char checkSingleItemProperty(void** ecx, int16_t a2);
@@ -26885,6 +26885,8 @@ void fun_4773e9(void** ecx) {
     return;
 }
 
+// advances pointer after sscanf is called on data (I think eng/dat data specifially), looking for carriage return or line feed
+// not sure what exact part of said data this applies to yet, it would seem to need to be 1 or more consecutive numbers, with carriage returns/line feeds?
 void fun_447566(void** ecx, signed char** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10) {
     signed char v11;
     signed char v12;
@@ -26892,9 +26894,9 @@ void fun_447566(void** ecx, signed char** a2, void** a3, void** a4, void** a5, v
     do {
         *a2 = *a2 + 1;
         v11 = **a2;
-        if (static_cast<int32_t>(v11) == 13) 
+        if (static_cast<int32_t>(v11) == 13) // break on carriage return...
             break;
-    } while (static_cast<int32_t>(v11) != 10 && v11);
+    } while (static_cast<int32_t>(v11) != 10 && v11); // or line feed?
     do {
         *a2 = *a2 + 1;
         v12 = **a2;
@@ -34099,7 +34101,8 @@ void** chooseValidPartyMember(void** ecx, void** a2, void** a3) {
 
 void** fun_426ad9(void** a1, void** a2, void** a3);
 
-// Appears to check for, and handle, immunity.
+// Appears to check for, and handle, immunity. a3 (which is usually 1) seems to be loosely disease progression esque maybe?
+// Returns 0/false if the character didn't/can't get the disease, 1/true otherwise
 signed char giveHealthProblem(void** ecx, void** diseaseID, void** a3, void** a4, void** a5, ...) {
     void** eax6;
     void** edx7;
@@ -103742,7 +103745,7 @@ void fun_4d3cbb();
 
 void fun_4d3e54(void** ecx);
 
-// This adjusts health and possibly kills people. a3 is incoming health change.
+// This adjusts health and possibly kills people. a3 is incoming health change. a2 is always 24 -- maybe indicates hours
 signed char fun_4d3745(void** ecx, int16_t a2, int16_t a3) {
     void** v4;
     void** v5;
@@ -103980,7 +103983,7 @@ signed char fun_4d3745(void** ecx, int16_t a2, int16_t a3) {
             }
         }
         ecx59 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v15 + 18))));
-        if (reinterpret_cast<signed char>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v15 + 36)))) < reinterpret_cast<signed char>(ecx59)) // + 36 would be half the health in +18 I think? (dear past me: where did you get this from, did you just infer?
+        if (reinterpret_cast<signed char>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v15 + 36)))) < reinterpret_cast<signed char>(ecx59)) // + 36 would be half the health in +18 I think? (dear past me: where did you get this from, did you just infer?)
             goto addr_4d3a42_36;
         eax60 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v15 + 18));
         if (reinterpret_cast<uint1_t>(eax60 < 0) | reinterpret_cast<uint1_t>(eax60 == 0)) 
@@ -116564,7 +116567,7 @@ struct s285 {
     int16_t f2;
 };
 
-// Appears to do the actual constructing of the disease object
+// Appears to do the actual constructing of the disease object. a3 loose "disease progression" var?
 void** fun_426ad9(void** a1, void** diseaseID, void** a3) {
     void** eax4;
     void** v5;
@@ -123614,7 +123617,7 @@ void fun_425c56(void** ecx) {
     return;
 }
 
-// health stuff; ecx + 12 is where the third argument in giveHealthProblem ends up. 
+// health stuff; ecx + 12 is where the third argument in giveHealthProblem ends up. analogous to code in fun_426cbd
 void fun_4272bb(void** ecx) {
     signed char v2;
     void** eax3;
@@ -135692,6 +135695,8 @@ void fun_4467fd(void** ecx) {
     return;
 }
 
+// apparently inserted automatically by (some versions of?) microsoft visual c++ for functions that allocate more than 1 page of stack space
+// see https://davidgow.net/hacks/pharaoh_stack.html (note: that's another game; not guaranteed this is being used the exact same way here)
 void _alloca_probe(int32_t ecx, void** a2, void** a3, void** a4, void** a5, void** a6) {
     int32_t v7;
     void* ecx8;
@@ -145736,7 +145741,7 @@ void fun_449fb7(void** a1, void** a2, void** a3, void** a4, void** a5, void** a6
     int32_t ebp942;
     int32_t ebp943;
     int32_t ebp944;
-
+    // this is checking a lot of numbers that correspond to indices and/or possible flags in eng/data data, idk specifically why yet
     v23 = reinterpret_cast<void**>(__return_address());
     *eax24 = reinterpret_cast<signed char>(*eax25 + al26);
     while (*reinterpret_cast<int32_t*>(ebp27 - 0xc7c) < 4) { // Decompilation gets back on track here?
@@ -160572,9 +160577,9 @@ void fun_426cbd(struct s853* ecx) {
         al4 = reinterpret_cast<signed char>(fun_42718b(ecx)); // Returns false if there is no upper bound to incubation period
         v2 = al4;
     }
-    eax5 = 0;
-    *reinterpret_cast<signed char*>(&eax5) = v2;
-    if (!eax5 && static_cast<int32_t>(ecx->f12) == 1) { // It is usually 1
+    eax5 = 0;  // these lines are basically "don't proc the next stage unless we got 0 from the last stage"
+    *reinterpret_cast<signed char*>(&eax5) = v2; // do these get proced sequentially all at once or is it just a state machine
+    if (!eax5 && static_cast<int32_t>(ecx->f12) == 1) { // progression var is usually 1 when this is called
         ecx->f12 = 2;
         eax6 = ecx->f0;
         al7 = reinterpret_cast<signed char>(fun_426e19(ecx)); // So this handles more stuff, ninja cholera, infection chance, etc.
@@ -160933,7 +160938,7 @@ void fun_427b02(void** a1, void** a2, void** a3, void** a4) {
     int32_t eax48;
 
     eax5 = (*reinterpret_cast<struct s866**>(ebp6 - 16))->f14;
-    eax7 = eax5 + eax5 * 4;
+    eax7 = eax5 + eax5 * 4; // multiply by 5
     __asm__("cdq ");
     eax8 = (eax7 + eax7) / *reinterpret_cast<int16_t*>(ebp9 - 12);
     infectionChance = *reinterpret_cast<void***>(&eax8);
@@ -193149,7 +193154,7 @@ signed char fun_426d9d(struct s1563* ecx) {
     return al4; 
 }
 
-// Does health stuff, one thing of which = trigger instakill
+// Does health stuff, called in giveHealthProblem if its arg is 1 (which it usually is esp. at beginning); one thing of which = trigger instakill
 void fun_426e19(void** ecx) {
     void** v2;
     int32_t eax3;
@@ -193187,7 +193192,7 @@ void fun_426e19(void** ecx) {
     __asm__("cdq ");
     eax3 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v2 + 18)) - edx4 >> 1;
     *reinterpret_cast<void***>(v2 + 36) = *reinterpret_cast<void***>(&eax3);
-    if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 22))) >= 1) { // Do we have an amount of incoming damage?
+    if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 22))) >= 1) { // Do we have a nonzero amount of incoming damage?
         ecx5 = ecx; // Address 426e98
         *reinterpret_cast<void***>(ecx5 + 14) = *reinterpret_cast<void***>(ecx + 22);
     } else { // If not, then choose one.
@@ -193228,12 +193233,12 @@ void fun_426e19(void** ecx) {
         }
         v29 = *reinterpret_cast<void***>(ecx + 14);
         v30 = *reinterpret_cast<void***>(ecx + 8);
-        eax31 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v30 + 18)) - reinterpret_cast<int16_t>(v29);
+        eax31 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v30 + 18)) - reinterpret_cast<int16_t>(v29); // current health - incoming health loss
         *reinterpret_cast<void***>(v30 + 18) = *reinterpret_cast<void***>(&eax31);
-        if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v30 + 18))) >= 1) { // is there any health at all left
-            goto 0x4270d5;
+        if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(v30 + 18))) >= 1) { // does the party member have any health left
+            goto 0x4270d5; // init sickness event
         } else {
-            goto 0x427010;
+            goto 0x427010; // they die
         }
     }
 }
@@ -193262,7 +193267,7 @@ signed char fun_42739d(void** ecx) {
     *reinterpret_cast<void***>(ecx + 14) = *reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 22); // Byte 24. The damage on the last day?
     if (!*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 16)) { // FFFF on gangrene for instance
         al2 = 0;
-    } else {
+    } else { // the values in + 16 and + 14 seem to correspond to days?
         v3 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 16)))); 
         v4 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 14)))); 
         eax9 = boundedRand(ecx, v4, v3, 1, edi5, esi6, ebx7, ecx, ebp8);
@@ -207591,7 +207596,7 @@ signed char fun_42718b(void** ecx) {
     v2 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 20)))); 
     v3 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 18))));
     eax8 = boundedRand(ecx, v3, v2, 1, edi4, esi5, ebx6, ecx, v7);
-    *reinterpret_cast<void***>(ecx + 22) = eax8; // This is our base initial health loss. It will be moved to +14 offset later.
+    *reinterpret_cast<void***>(ecx + 22) = eax8; // This is our base initial health loss. It will be stored at +14 offset later.
     if (!*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 8)) { // If there is no incubation period upper bound (i.e. you get it immediately)
         al9 = 0;
     } else {
@@ -207605,7 +207610,7 @@ signed char fun_42718b(void** ecx) {
             *reinterpret_cast<void***>(ecx + 20) = *reinterpret_cast<void***>(&eax15); // What disease would that even be? (...COVID-19, according to google)
         }
         eax16 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 24));
-        if (*reinterpret_cast<unsigned char*>(&eax16) & 16) {
+        if (*reinterpret_cast<unsigned char*>(&eax16) & 16) { // Checking another bitflag special case
             v17 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 8)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 6));
             v18 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 20)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 32) + 18));
             if (!v17) {
@@ -207620,6 +207625,7 @@ signed char fun_42718b(void** ecx) {
     return al9;
 }
 
+// destructor for something
 void** fun_427165(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10) {
     void** v11;
     int32_t ebp12;
