@@ -957,6 +957,7 @@
 // fun_43e43e ==> handleSquirrelAnimation
 // fun_43e620 ==> destructHuntingAnimal
 // fun_494e9b ==> removeAnimal
+// fun_4a3be0 ==> initHunting
 // fun_4a3eb9 ==> wrapUpHunting
 // fun_4a432f ==> handleHuntingSceneEvent
 // fun_4a4046 ==> handleHuntingSceneShot
@@ -136192,8 +136193,8 @@ void** fun_42bb7f(void** ecx, void** a2, void** a3, void** a4, void** a5, void**
 
 void fun_4a3e9e();
 
-// initializes a new hunting session? 
-void** fun_4a3be0(void** ecx, void** a2, void** a3, void** a4, void** a5, signed char buffaloStampedeFlag, void** a7, void** a8, void** a9, void** a10) {
+// initializes a new hunting session, top level
+void** initHunting(void** ecx, void** a2, void** a3, void** a4, void** locationID, signed char buffaloStampedeFlag, void** a7, void** a8, void** a9, void** a10) {
     void** v11;
     void*** esp12;
     void** v13;
@@ -136280,21 +136281,21 @@ void** fun_4a3be0(void** ecx, void** a2, void** a3, void** a4, void** a5, signed
     *reinterpret_cast<int16_t*>(v24 + 0xbc) = 20; // # of bullets
     *reinterpret_cast<int16_t*>(v24 + 0xb8) = 0;
     *reinterpret_cast<void***>(v24 + 0xc0) = reinterpret_cast<void**>(0);
-    *reinterpret_cast<signed char*>(v24 + 0xae) = 1;
+    *reinterpret_cast<signed char*>(v24 + 0xae) = 1; // Flag for whether gun is loaded
     *reinterpret_cast<int16_t*>(v24 + 0xba) = 1; // Type of gun. 0 = pistol; 1 = rifle; 2 = shotgun
     *reinterpret_cast<void***>(v24 + 94) = reinterpret_cast<void**>(0);
     *reinterpret_cast<void***>(v24 + 80) = reinterpret_cast<void**>(0xffff); 
     *reinterpret_cast<void***>(v24 + 78) = *reinterpret_cast<void***>(v24 + 80); 
     *reinterpret_cast<void***>(v24 + 76) = *reinterpret_cast<void***>(v24 + 78); 
-    *reinterpret_cast<void***>(v24 + 86) = a5; // Location ID
+    *reinterpret_cast<void***>(v24 + 86) = locationID; // Save the location ID to reference parsed LNODE/TNODE data
     *reinterpret_cast<void***>(v24 + 82) = reinterpret_cast<void**>(0);
     *reinterpret_cast<signed char*>(v24 + 0xc1) = buffaloStampedeFlag; // If true, we get a buffalo stampede. (It is usually not true.)
     *reinterpret_cast<int16_t*>(&v33) = 0;
-    while (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v33)) < 3) {
+    while (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v33)) < 3) { // these might be related to gunshot sound IDs?
         *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v24 + *reinterpret_cast<int16_t*>(&v33) * 4) + 0xc2) = 0;
         *reinterpret_cast<int16_t*>(&v33) = reinterpret_cast<int16_t>(*reinterpret_cast<int16_t*>(&v33) + 1);
     }
-    *reinterpret_cast<void***>(v24 + 0xce) = reinterpret_cast<void**>(0); // Stored gunshot sound ID 
+    *reinterpret_cast<void***>(v24 + 0xce) = reinterpret_cast<void**>(0); // also stored gunshot sound ID?
     *reinterpret_cast<void***>(v24 + 0xd2) = reinterpret_cast<void**>(0);
     ecx34 = *reinterpret_cast<void***>(v24 + 70);
     eax39 = fun_4669f0(ecx34, ebp15 + 0xffffffe4, v22, v20, v18, v24, v35, v36, v37, v38, v33, v32, v17, fun_4a3e9e, 1, v13, v11);
@@ -171750,7 +171751,7 @@ void fun_46926d(void** a1, void** a2, void** a3, void** a4, void** a5, void** a6
         *reinterpret_cast<void***>(ebp726 - 0xa60) = eax725;
         eax727 = (*reinterpret_cast<struct s1074**>(ebp728 - 0xa60))->f2650->f164; // is hunting allowed in this area? at a5a + 0xa4
         if (!(reinterpret_cast<uint1_t>(eax727 < 0) | reinterpret_cast<uint1_t>(eax727 == 0))) 
-            goto addr_469e5f_193;
+            goto ChoseHunting;
     } else {
         if (*reinterpret_cast<uint32_t*>(ebp729 - 0xb50) > 3) 
             goto 0x46bc83;
@@ -171782,7 +171783,7 @@ void fun_46926d(void** a1, void** a2, void** a3, void** a4, void** a5, void** a6
     *reinterpret_cast<signed char*>(ebp752 - 4) = 1;
     fun_46d7e6(ecx748, __return_address());
     goto 0x46bc83;
-    addr_469e5f_193:
+    ChoseHunting:
     sufficientHuntingSupplies = checkHuntingSupplies(ecx721, reinterpret_cast<int32_t>(ebp753) + 0xfffffe00, reinterpret_cast<int32_t>(ebp754) + 0xfffffdfc, __return_address());
     ecx748 = reinterpret_cast<void**>(0);
     *reinterpret_cast<signed char*>(&ecx748) = sufficientHuntingSupplies;
@@ -172079,10 +172080,10 @@ void fun_46926d(void** a1, void** a2, void** a3, void** a4, void** a5, void** a6
         eax1031 = ebp1032->f8->f12 - 1; // hey remember that buffalo stampede flag? this is it
         v1033 = reinterpret_cast<int32_t>(-(eax1031 - (eax1031 + reinterpret_cast<uint1_t>(eax1031 < eax1031 + reinterpret_cast<uint1_t>(eax1031 < 1))))); // Just ignore the math here, it takes the value of the flag.
         eax1034 = gameSimulationData;
-        v1035 = *reinterpret_cast<void***>(eax1034 + 0xa5a);
+        v1035 = *reinterpret_cast<void***>(eax1034 + 0xa5a); // Location ID
         eax1036 = dataFromDAT;
         ecx1037 = *reinterpret_cast<void***>(ebp1038 - 0x7a0);
-        eax1040 = fun_4a3be0(ecx1037, eax1036, 0x29a, reinterpret_cast<int32_t>(ebp1039) + 0xfffffe08, v1035, *reinterpret_cast<signed char*>(&v1033), 0, 0, v960, __return_address());
+        eax1040 = initHunting(ecx1037, eax1036, 0x29a, reinterpret_cast<int32_t>(ebp1039) + 0xfffffe08, v1035, *reinterpret_cast<signed char*>(&v1033), 0, 0, v960, __return_address());
         *reinterpret_cast<void***>(ebp1041 - 0x7a4) = eax1040;
     }
     *reinterpret_cast<signed char*>(ebp1042 - 4) = 21;
