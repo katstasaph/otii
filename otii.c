@@ -943,16 +943,23 @@
 // fun_41711c ==> destructHuntingAnimalWrapper
 // fun_43d420 ==> initializeBuffaloDeerPronghornOrElk
 // fun_43d64d ==> mapBuffaloDeerPronghornElkIDSwitchCases
+// fun_43d8f6 ==> handleBuffaloDeerPronghornElkAnimation
 // fun_43cef0 ==< initializeBearMooseOrRabbit
 // fun_43d0e5 ==> mapBearMooseRabbitIDSwitchCases
+// fun_43d2c6 ==> handleBearMooseRabbitAnimation
 // fun_43ddab ==> initializeDuckOrGoose
 // fun_43deb4 ==> mapDuckGooseIDSwitchCases
 // fun_43daeb ==> initializeMountainGoat
+// fun_43dc96 ==> handleMountainGoatAnimation
+// fun_43e027 ==> handleDuckGooseAnimation
 // fun_43e150 ==> initializeSquirrel
 // fun_43e259 ==> mapSquirrelIDSwitchCases
+// fun_43e43e ==> handleSquirrelAnimation
 // fun_43e620 ==> destructHuntingAnimal
 // fun_494e9b ==> removeAnimal
 // fun_4a3eb9 ==> wrapUpHunting
+// fun_4a432f ==> handleHuntingSceneEvent
+// fun_4a4046 ==> handleHuntingSceneShot
 // fun_4a477a ==> adjustGunshotCoordsForShotDeviation
 // fun_4a491f ==> updatePostHuntVars
 // fun_4a4958 ==> updateGunAndMessageVars
@@ -961,6 +968,7 @@
 // fun_4a4d82 ==> removeAllAnimalsInScene
 // fun_4a4e01 ==> spawnLowMeatAnimal
 // fun_4a5470 ==> spawnHigherMeatAnimal
+// fun_4a5ce1 ==> playHuntingSound
 // fun_4a5ed0 ==> huntingDestructorWrapper
 // fun_4a6f10 ==> populateChooseFirearmWindow
 // fun_4a7562 ==> checkHuntingSupplies
@@ -13287,9 +13295,10 @@ void fun_40deda(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a
 
 void fun_411362(void** ecx, void** a2, void** a3, void** a4);
 
-struct s10 {
+// this struct seems to be used as the return value for things involving streams, files, etc.
+struct s10 { // (including sscanf although that returns int normally and seems to also do that here too)
     int32_t f0;
-    signed char[4504171] pad4504175;
+    signed char[4504171] pad4504175; // maybe it would explain why this is really big?
     signed char f4504175;
 };
 
@@ -16962,17 +16971,17 @@ void** fun_4ad173(void** ecx, void** a2, void** a3, void** a4) {
     return ecx;
 }
 
-// seems to be very similar to below, is it just for a different type of oject or data?
-void** fun_42c4a8(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, ...) {
+// seems to be very similar to below eg copies coords from a2 into ecx, is it just for a different type of object or data?
+void** fun_42c4a8(void** ecx, void** coordStruct, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, ...) {
     void** v10;
     void** v11;
     void** v12;
     void** v13;
 
-    v10 = *reinterpret_cast<void***>(a2 + 6);
-    v11 = *reinterpret_cast<void***>(a2 + 4);
-    v12 = *reinterpret_cast<void***>(a2 + 2);
-    v13 = *reinterpret_cast<void***>(a2);
+    v10 = *reinterpret_cast<void***>(coordStruct + 6);
+    v11 = *reinterpret_cast<void***>(coordStruct + 4);
+    v12 = *reinterpret_cast<void***>(coordStruct + 2);
+    v13 = *reinterpret_cast<void***>(coordStruct);
     *reinterpret_cast<void***>(ecx) = v13;
     *reinterpret_cast<void***>(ecx + 2) = v12;
     *reinterpret_cast<void***>(ecx + 6) = v10;
@@ -16981,11 +16990,11 @@ void** fun_42c4a8(void** ecx, void** a2, void** a3, void** a4, void** a5, void**
 }
 
 // copies coords from a2 into ecx
-void** copyCoords(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10, void** a11, void** a12, void** a13, void** a14, void** a15, void** a16, void** a17, void** a18, void** a19, void** a20, void** a21, void** a22, void** a23, void** a24) {
-    *reinterpret_cast<void***>(ecx) = *reinterpret_cast<void***>(a2);
-    *reinterpret_cast<void***>(ecx + 2) = *reinterpret_cast<void***>(a2 + 2);
-    *reinterpret_cast<void***>(ecx + 4) = *reinterpret_cast<void***>(a2 + 4);
-    *reinterpret_cast<void***>(ecx + 6) = *reinterpret_cast<void***>(a2 + 6);
+void** copyCoords(void** ecx, void** coordStruct, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10, void** a11, void** a12, void** a13, void** a14, void** a15, void** a16, void** a17, void** a18, void** a19, void** a20, void** a21, void** a22, void** a23, void** a24) {
+    *reinterpret_cast<void***>(ecx) = *reinterpret_cast<void***>(coordStruct);
+    *reinterpret_cast<void***>(ecx + 2) = *reinterpret_cast<void***>(coordStruct + 2);
+    *reinterpret_cast<void***>(ecx + 4) = *reinterpret_cast<void***>(coordStruct + 4);
+    *reinterpret_cast<void***>(ecx + 6) = *reinterpret_cast<void***>(coordStruct + 6);
     return ecx;
 }
 
@@ -23998,7 +24007,7 @@ signed char fun_43ea62(void** ecx, void** a2) {
             *reinterpret_cast<signed char*>(&eax19) = v18;
             if (eax19 && (eax20 = *reinterpret_cast<void***>(eax10), al21 = fun_43bb90(eax10), ecx22 = 0, *reinterpret_cast<signed char*>(&ecx22) = al21, !!ecx22)) {
                 eax23 = *reinterpret_cast<void***>(eax10); // hotspot clicking ahead
-                 *reinterpret_cast<void***>(eax23 + 24)(eax10, a2); // Possibilities: fun_496c69, fun_49f83b, handleClickInScene, fun_406577, fun_4c819c. fun_41e3e4, fun_455df0, fun_455d5d, handleAfterClickInScene, fun_4a432f, fun_4919ba (journal), handleHighScoreWindowClick, handleHealthWindowClick, handleConversationChoiceClick (conversation); don't change this!
+                 *reinterpret_cast<void***>(eax23 + 24)(eax10, a2); // Possibilities: fun_496c69, fun_49f83b, handleClickInScene, fun_406577, fun_4c819c. fun_41e3e4, fun_455df0, fun_455d5d, handleAfterClickInScene, handleHuntingSceneEvent, fun_4919ba (journal), handleHighScoreWindowClick, handleHealthWindowClick, handleConversationChoiceClick (conversation); don't change this!
                 ecx24 = 0;
                 *reinterpret_cast<void***>(&ecx24) = *reinterpret_cast<void***>(a2 + 20); // address 43eb98
                 if (!ecx24) 
@@ -57356,13 +57365,13 @@ struct s86 {
     int32_t f28;
 };
 
-// Does something with hunting sounds (gunshots etc)
-void fun_4a5ce1(void** ecx, void** a2) {
+// Does something with hunting sounds (gunshots etc). values for a2: 0 = regular gunshot, 1 = weird gunshot, 2 = empty gun
+void playHuntingSound(void** ecx, void** huntingSoundType) {
     void** eax3;
     void** v4;
     void** v5;
     signed char al6;
-    void** ecx7;
+    void** soundEffectsEnabled;
     int32_t eax8;
     int32_t eax9;
     uint32_t v10;
@@ -57391,25 +57400,25 @@ void fun_4a5ce1(void** ecx, void** a2) {
     v4 = *reinterpret_cast<void***>(eax3 + 86);
     v5 = *reinterpret_cast<void***>(v4);
     al6 = areSoundEffectsEnabled(v4));
-    ecx7 = reinterpret_cast<void**>(0);
-    *reinterpret_cast<signed char*>(&ecx7) = al6;
-    if (ecx7) {
-        if (a2) 
+    soundEffectsEnabled = reinterpret_cast<void**>(0);
+    *reinterpret_cast<signed char*>(&soundEffectsEnabled) = al6;
+    if (soundEffectsEnabled) {
+        if (huntingSoundType) // a2 will be nonzero if it's not the normal gunshot sound
             goto addr_4a5e9e_6;
     } else {
         goto NoSoundEffects;
     }
-    if (!*reinterpret_cast<void***>(ecx + 0xce)) {
+    if (!*reinterpret_cast<void***>(ecx + 0xce)) { // If we don't have an ID for the sound our current gun makes
         eax8 = *reinterpret_cast<int16_t*>(ecx + 0xba); // Type of gun
         eax9 = eax8 + eax8 * 4 + 0x684c; // 0x684c = pistol sounds, look ahead for sound id if not using a pistol 
         *reinterpret_cast<int16_t*>(&v10) = *reinterpret_cast<int16_t*>(&eax9);
         eax11 = g501e94;
         eax12 = *reinterpret_cast<void***>(eax11);
-        eax13 = reinterpret_cast<void**>(*reinterpret_cast<void***>(eax12)(eax11, (v10 & 0xffff) + 0x3eb0000, 0));
-        *reinterpret_cast<void***>(ecx + 0xce) = eax13;
+        eax13 = fun_441c52(eax11, (v10 & 0xffff) + 0x3eb0000, 0));
+        *reinterpret_cast<void***>(ecx + 0xce) = eax13; // Store that ID so we don't have to look it up again
     }
-    edx14 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 0xce));
-    ecx15 = *reinterpret_cast<void***>(ecx + 0xce);
+    edx14 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 0xce)); 
+    ecx15 = *reinterpret_cast<void***>(ecx + 0xce); // Stored gunshot sound ID
     playSoundWrapper(ecx15, 0);
     addr_4a5eb7_14:
     NoSoundEffects:
@@ -57421,7 +57430,7 @@ void fun_4a5ce1(void** ecx, void** a2) {
             eax20 = g501e94;
             eax21 = *reinterpret_cast<int16_t*>(&eax19) + 0x6860; // IDs of gunshot sounds
             eax22 = *reinterpret_cast<void***>(eax20);
-            eax23 = fun_44c152(eax20, *reinterpret_cast<uint16_t*>(&eax21) + 0x3eb0000, 0));
+            eax23 = fun_441c52(eax20, *reinterpret_cast<uint16_t*>(&eax21) + 0x3eb0000, 0));
             *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(ecx + *reinterpret_cast<int16_t*>(&eax19) * 4) + 0xc2) = eax23;
         }
         edx24 = **reinterpret_cast<struct s86***>(reinterpret_cast<uint32_t>(ecx + *reinterpret_cast<int16_t*>(&eax19) * 4) + 0xc2);
@@ -57430,11 +57439,11 @@ void fun_4a5ce1(void** ecx, void** a2) {
         goto addr_4a5eb7_14;
     } else {
         if (a2 == 2) {
-            if (!*reinterpret_cast<void***>(ecx + 0xd2)) {
+            if (!*reinterpret_cast<void***>(ecx + 0xd2)) { // If we don't have a stored empty gun sound ref
                 eax26 = g501e94;
                 eax27 = *reinterpret_cast<void***>(eax26);
-                eax28 = fun_44c152(eax26, 0x3eb685b, 0)); // Empty gun sound
-                *reinterpret_cast<void***>(ecx + 0xd2) = eax28;
+                eax28 = fun_441c52(eax26, 0x3eb685b, 0)); // 0x3eb685b is empty gun sound
+                *reinterpret_cast<void***>(ecx + 0xd2) = eax28; // Store it
             }
             edx29 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(ecx + 0xd2));
             ecx30 = *reinterpret_cast<void***>(ecx + 0xd2);
@@ -57690,11 +57699,11 @@ int16_t spawnHigherMeatAnimal(void** ecx, int16_t a2, void*** a3) {
                     if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v53)) != 1) { // was a random roll 1-2
                         edx71 = **reinterpret_cast<struct s88***>(reinterpret_cast<uint32_t>(v14 + *reinterpret_cast<int16_t*>(v14 + 0xb2) * 4) + 0x66);
                         ecx72 = *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v14 + *reinterpret_cast<int16_t*>(v14 + 0xb2) * 4) + 0x66);
-                        fun_43d8f6(ecx72, 4);
+                        handleBuffaloDeerPronghornElkAnimation(ecx72, 4);
                     } else {
                         edx73 = **reinterpret_cast<struct s89***>(reinterpret_cast<uint32_t>(v14 + *reinterpret_cast<int16_t*>(v14 + 0xb2) * 4) + 0x66);
                         ecx74 = *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v14 + *reinterpret_cast<int16_t*>(v14 + 0xb2) * 4) + 0x66);
-                        fun_43d8f6(ecx74, 3);
+                        handleBuffaloDeerPronghornElkAnimation(ecx74, 3);
                     }
                     v75 = *reinterpret_cast<struct s90**>(reinterpret_cast<uint32_t>(v14 + *reinterpret_cast<int16_t*>(v14 + 0xb2) * 4) + 0x66);
                     v75->f62 = v62;
@@ -57882,7 +57891,7 @@ int16_t spawnLowMeatAnimal(void** ecx, int16_t a2, void*** a3) {
         __asm__("cdq ");
         eax32 = v26 / reinterpret_cast<signed char>(10);
         *reinterpret_cast<int16_t*>(&v33) = *reinterpret_cast<int16_t*>(&eax32);
-        if (static_cast<int32_t>(v26) == 0x154 || (static_cast<int32_t>(v26) == 0x190 || static_cast<int32_t>(v26) == 0x172)) { // gray squirrel, rabbit, prairie dog
+        if (static_cast<int32_t>(v26) == 0x154 || (static_cast<int32_t>(v26) == 0x190 || static_cast<int32_t>(v26) == 0x172)) { // squirrel, ground squirrel, rabbit
             eax35 = boundedRand(10, 1, 2, 1, v12, v10, v8, v34, v14);
             eax36 = reinterpret_cast<unsigned char>(eax35) + static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v33));
             *reinterpret_cast<int16_t*>(&v33) = *reinterpret_cast<int16_t*>(&eax36);
@@ -58046,7 +58055,7 @@ void** fun_4d9520(void** ecx, void** a2, void** a3, int16_t a4, struct s87* a5, 
 
 void mapBearMooseRabbitIDSwitchCases(int32_t ecx);
 
-void fun_43d2c6(void** ecx, int32_t a2);
+void handleBearMooseRabbitAnimation(void** ecx, int32_t a2);
 
 void fun_49527f(void** ecx, void** a2, void** a3);
 
@@ -58091,8 +58100,8 @@ void** initializeBearMooseOrRabbit(void** ecx, void** a2, void** a3, int32_t a4,
     void** eax43;
     uint32_t eax44;
     int32_t v45;
-    int32_t v46;
-    int32_t v47;
+    int32_t startingX;
+    int32_t startingY;
     void** ecx48;
     void** v49;
     void** eax50;
@@ -58134,16 +58143,16 @@ void** initializeBearMooseOrRabbit(void** ecx, void** a2, void** a3, int32_t a4,
                     ecx10 = ecx;
                     *reinterpret_cast<void***>(ecx10 + 0x7a) = eax23; // Black bear health
                     break;
-                case 5: // 140
+                case 5: // 140: Rabbit?
                 case 6: // 150
-                case 7: // 160: Rabbit
+                case 7: // 160
                     eax25 = boundedRand(ecx10, 1, 4, 1, edi13, esi14, ebx15, v24, v12); // Min/max meat from rabbit
                     *reinterpret_cast<int16_t*>(ecx + 0x7c) = *reinterpret_cast<int16_t*>(&eax25);
                     eax27 = boundedRand(ecx, 15, 40, 1, edi13, esi14, ebx15, v26, v12);
                     ecx10 = ecx;
                     *reinterpret_cast<void***>(ecx10 + 0x7a) = eax27; // Rabbit health
                 case 8:
-                    goto 0x43d186;
+                    goto addr_43d186_16;
                 }
             }
         } else {
@@ -58168,29 +58177,29 @@ void** initializeBearMooseOrRabbit(void** ecx, void** a2, void** a3, int32_t a4,
     }
     v32 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(v11)));
     if (v32 == 1) {
-        fun_43d2c6(ecx, 1);
+        handleBearMooseRabbitAnimation(ecx, 1);
         ebx33 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x6e));
-        eax34 = boundedRand(ecx, 10, 0xc8, 1, edi13, esi14, ebx15, v32, v12);
+        eax34 = boundedRand(ecx, 10, 0xc8, 1, edi13, esi14, ebx15, v32, v12); // In all the init functions, we randomize starting x so they don't clump up
         eax35 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 18)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14));
         ebx36 = ebx33 - reinterpret_cast<unsigned char>(eax34) - static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax35));
-        *reinterpret_cast<int16_t*>(&v37) = *reinterpret_cast<int16_t*>(&ebx36);
+        *reinterpret_cast<int16_t*>(&v37) = *reinterpret_cast<int16_t*>(&ebx36); // X position to start out at
     } else {
         if (v32 == 2) {
-            fun_43d2c6(ecx, 2);
+            handleBearMooseRabbitAnimation(ecx, 2);
             ebx38 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x72));
             eax39 = boundedRand(ecx, 10, 0xc8, 1, edi13, esi14, ebx15, v32, v12);
             ebx40 = ebx38 + reinterpret_cast<unsigned char>(eax39);
-            *reinterpret_cast<int16_t*>(&v37) = *reinterpret_cast<int16_t*>(&ebx40);
+            *reinterpret_cast<int16_t*>(&v37) = *reinterpret_cast<int16_t*>(&ebx40); // X position to start out at
         }
     }
     ecx41 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74))));
     eax42 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x76)) - reinterpret_cast<unsigned char>(ecx41);
     eax43 = boundedRand(ecx41, 0, static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax42)), 1, edi13, esi14, ebx15, v32, v12);
     eax44 = reinterpret_cast<unsigned char>(eax43) + static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74)));
-    *reinterpret_cast<int16_t*>(&v45) = *reinterpret_cast<int16_t*>(&eax44);
-    v46 = v45;
-    v47 = v37;
-    fun_49527f(ecx, *reinterpret_cast<void***>(&v47), *reinterpret_cast<void***>(&v46));
+    *reinterpret_cast<int16_t*>(&v45) = *reinterpret_cast<int16_t*>(&eax44); // Y position to start out at -- this is always the same for animal spawn groups
+    startingX = v45;
+    startingY = v37;
+    fun_49527f(ecx, *reinterpret_cast<void***>(&startingY), *reinterpret_cast<void***>(&startingX));
     g0 = eax7;
     return ecx;
     addr_43d096_12:
@@ -58212,7 +58221,7 @@ void** initializeBearMooseOrRabbit(void** ecx, void** a2, void** a3, int32_t a4,
 
 void mapDuckGooseIDSwitchCases();
 
-void fun_43e027(void** ecx, void** a2);
+void handleDuckGooseAnimation(void** ecx, void** a2);
 
 void** initializeDuckOrGoose(void** ecx, void** a2, void** a3, int32_t a4, struct s87* a5, int32_t a6) {
     void** eax7;
@@ -58247,8 +58256,8 @@ void** initializeDuckOrGoose(void** ecx, void** a2, void** a3, int32_t a4, struc
     void** eax36;
     uint32_t eax37;
     int32_t v38;
-    int32_t v39;
-    int32_t v40;
+    int32_t startingX;
+    int32_t startingY;
 
     eax7 = g0;
     g0 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(__zero_stack_offset()) - 4 - 4 - 4 - 4);
@@ -58286,42 +58295,42 @@ void** initializeDuckOrGoose(void** ecx, void** a2, void** a3, int32_t a4, struc
             goto 0x43dee7;
         }
     }
-    if (!eax12) { // some kind of health sanity checking? or something else? the stuff below looks like x y coord checks
-        eax24 = boundedRand(ecx10, 1, 2, 1, edi14, esi15, ebx16, v23, v13);
+    if (!eax12) { // some kind of health sanity checking? 
+        eax24 = boundedRand(ecx10, 1, 2, 1, edi14, esi15, ebx16, v23, v13); // Choose left or right direction
         v11 = eax24;
     }
     v25 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(v11)));
-    if (v25 == 1) {
-        fun_43e027(ecx, 1);
+    if (v25 == 1) {  // They will fly in from the left
+        handleDuckGooseAnimation(ecx, 1);
         ebx26 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x6e));
-        eax27 = boundedRand(ecx, 10, 0xc8, 1, edi14, esi15, ebx16, v25, v13);
+        eax27 = boundedRand(ecx, 10, 0xc8, 1, edi14, esi15, ebx16, v25, v13); 
         eax28 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 18)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14));
         ebx29 = ebx26 - reinterpret_cast<unsigned char>(eax27) - static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax28));
-        *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx29);
+        *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx29); // X position to start out at
     } else {
-        if (v25 == 2) {
-            fun_43e027(ecx, 2);
+        if (v25 == 2) { // They will fly in from the right
+            handleDuckGooseAnimation(ecx, 2);
             ebx31 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x72));
             eax32 = boundedRand(ecx, 10, 0xc8, 1, edi14, esi15, ebx16, v25, v13);
             ebx33 = ebx31 + reinterpret_cast<unsigned char>(eax32);
-            *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx33);
+            *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx33); // X position to start out at
         }
     }
     ecx34 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74))));
     eax35 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x76)) - reinterpret_cast<unsigned char>(ecx34);
     eax36 = boundedRand(ecx34, 0, static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax35)), 1, edi14, esi15, ebx16, v25, v13);
     eax37 = reinterpret_cast<unsigned char>(eax36) + static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74)));
-    *reinterpret_cast<int16_t*>(&v38) = *reinterpret_cast<int16_t*>(&eax37);
-    v39 = v38;
-    v40 = v30;
-    fun_49527f(ecx, *reinterpret_cast<void***>(&v40), *reinterpret_cast<void***>(&v39));
+    *reinterpret_cast<int16_t*>(&v38) = *reinterpret_cast<int16_t*>(&eax37); // Starting Y position
+    startingX = v38;
+    startingY = v30;
+    fun_49527f(ecx, *reinterpret_cast<void***>(&startingY), *reinterpret_cast<void***>(&startingX));
     g0 = eax7;
     return ecx;
 }
 
 void mapSquirrelIDSwitchCases();
 
-void fun_43e43e(void** ecx, void** a2);
+void handleSquirrelAnimation(void** ecx, void** a2);
 
 void** initializeSquirrel(void** ecx, void** a2, void** a3, int32_t a4, struct s87* a5, int32_t a6) {
     void** eax7;
@@ -58356,8 +58365,8 @@ void** initializeSquirrel(void** ecx, void** a2, void** a3, int32_t a4, struct s
     void** eax36;
     uint32_t eax37;
     int32_t v38;
-    int32_t v39;
-    int32_t v40;
+    int32_t startingX;
+    int32_t startingY;
 
     eax7 = g0;
     g0 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(__zero_stack_offset()) - 4 - 4 - 4 - 4);
@@ -58396,41 +58405,41 @@ void** initializeSquirrel(void** ecx, void** a2, void** a3, int32_t a4, struct s
         }
     }
     if (!eax12) {
-        eax24 = boundedRand(ecx10, 1, 2, 1, edi14, esi15, ebx16, v23, v13);
+        eax24 = boundedRand(ecx10, 1, 2, 1, edi14, esi15, ebx16, v23, v13); // Roll for direction to face
         v11 = eax24;
     }
     v25 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(v11)));
     if (v25 == 1) {
-        fun_43e43e(ecx, 1);
+        handleSquirrelAnimation(ecx, 1);
         ebx26 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x6e));
         eax27 = boundedRand(ecx, 10, 0xc8, 1, edi14, esi15, ebx16, v25, v13);
         eax28 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 18)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14));
         ebx29 = ebx26 - reinterpret_cast<unsigned char>(eax27) - static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax28));
-        *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx29);
+        *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx29); // X position to start out at
     } else {
         if (v25 == 2) {
-            fun_43e43e(ecx, 2);
+            handleSquirrelAnimation(ecx, 2);
             ebx31 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x72));
             eax32 = boundedRand(ecx, 10, 0xc8, 1, edi14, esi15, ebx16, v25, v13);
             ebx33 = ebx31 + reinterpret_cast<unsigned char>(eax32);
-            *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx33);
+            *reinterpret_cast<int16_t*>(&v30) = *reinterpret_cast<int16_t*>(&ebx33); 
         }
     }
     ecx34 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74))));
     eax35 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x76)) - reinterpret_cast<unsigned char>(ecx34);
     eax36 = boundedRand(ecx34, 0, static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax35)), 1, edi14, esi15, ebx16, v25, v13);
     eax37 = reinterpret_cast<unsigned char>(eax36) + static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74)));
-    *reinterpret_cast<int16_t*>(&v38) = *reinterpret_cast<int16_t*>(&eax37);
-    v39 = v38;
-    v40 = v30;
-    fun_49527f(ecx, *reinterpret_cast<void***>(&v40), *reinterpret_cast<void***>(&v39));
+    *reinterpret_cast<int16_t*>(&v38) = *reinterpret_cast<int16_t*>(&eax37); // Y position to start out at
+    startingX = v38;
+    startingY = v30;
+    fun_49527f(ecx, *reinterpret_cast<void***>(&startingY), *reinterpret_cast<void***>(&startingX));
     g0 = eax7;
     return ecx;
 }
 
 void mapBuffaloDeerPronghornElkIDSwitchCases(int32_t ecx);
 
-void fun_43d8f6(void** ecx, void** a2);
+void handleBuffaloDeerPronghornElkAnimation(void** ecx, void** a2);
 
 void** initializeBuffaloDeerPronghornOrElk(void** ecx, void** a2, void** a3, int32_t a4, struct s87* a5, int32_t a6) {
     void** eax7;
@@ -58568,34 +58577,34 @@ void** initializeBuffaloDeerPronghornOrElk(void** ecx, void** a2, void** a3, int
         }
     }
     if (!v11) {
-        eax46 = boundedRand(ecx10, 1, 2, 1, edi14, esi15, ebx16, v45, v13);
+        eax46 = boundedRand(ecx10, 1, 2, 1, edi14, esi15, ebx16, v45, v13); // Roll for direction to face
         v11 = eax46;
     }
     v47 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(v11)));
     if (v47 == 1) {
-        fun_43d8f6(ecx, 1);
+        handleBuffaloDeerPronghornElkAnimation(ecx, 1);
         ebx48 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x6e));
         eax49 = boundedRand(ecx, 10, 0x190, 1, edi14, esi15, ebx16, v47, v13);
         eax50 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 18)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14));
         ebx51 = ebx48 - reinterpret_cast<unsigned char>(eax49) - static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax50));
-        *reinterpret_cast<int16_t*>(&v52) = *reinterpret_cast<int16_t*>(&ebx51);
+        *reinterpret_cast<int16_t*>(&v52) = *reinterpret_cast<int16_t*>(&ebx51); // X position to start out at
     } else {
         if (v47 == 2) {
-            fun_43d8f6(ecx, 2);
+            handleBuffaloDeerPronghornElkAnimation(ecx, 2);
             ebx53 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x72));
             eax54 = boundedRand(ecx, 10, 0x190, 1, edi14, esi15, ebx16, v47, v13);
             ebx55 = ebx53 + reinterpret_cast<unsigned char>(eax54);
-            *reinterpret_cast<int16_t*>(&v52) = *reinterpret_cast<int16_t*>(&ebx55);
+            *reinterpret_cast<int16_t*>(&v52) = *reinterpret_cast<int16_t*>(&ebx55); // X position to start out at
         }
     }
     ecx56 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74))));
     eax57 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x76)) - reinterpret_cast<unsigned char>(ecx56);
     eax58 = boundedRand(ecx56, 0, static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax57)), 1, edi14, esi15, ebx16, v47, v13);
     eax59 = reinterpret_cast<unsigned char>(eax58) + static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x74)));
-    *reinterpret_cast<int16_t*>(&v60) = *reinterpret_cast<int16_t*>(&eax59);
-    v61 = v60;
-    v62 = v52;
-    fun_49527f(ecx, *reinterpret_cast<void***>(&v62), *reinterpret_cast<void***>(&v61));
+    *reinterpret_cast<int16_t*>(&v60) = *reinterpret_cast<int16_t*>(&eax59); // Y position to start at
+    startingX = v60;
+    startingY = v52;
+    fun_49527f(ecx, *reinterpret_cast<void***>(&startingY), *reinterpret_cast<void***>(&startingX));
     *reinterpret_cast<signed char*>(ecx + 0x84) = 1;
     if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&a4)) >= 1 && static_cast<int32_t>(*reinterpret_cast<int16_t*>(&a4)) <= 3) {
         *reinterpret_cast<signed char*>(ecx + 0x85) = 1;
@@ -58604,7 +58613,7 @@ void** initializeBuffaloDeerPronghornOrElk(void** ecx, void** a2, void** a3, int
     return ecx;
 }
 
-void fun_43dc96(void** ecx, int32_t a2);
+void handleMountainGoatAnimation(void** ecx, int32_t a2);
 
 void** initializeMountainGoat(void** ecx, void** a2, void** a3, int32_t a4, struct s87* a5) {
     void** eax6;
@@ -58649,7 +58658,7 @@ void** initializeMountainGoat(void** ecx, void** a2, void** a3, int32_t a4, stru
     *reinterpret_cast<void***>(ecx + 0x7a) = eax16;
     eax19 = boundedRand(ecx, 0, 1, 1, edi8, esi9, ebx10, v17, ecx, ecx, 0, 1, 1, edi8, esi9, ebx10, v18, ecx);
     if (!eax19) {
-        fun_43dc96(ecx, 1);
+        handleMountainGoatAnimation(ecx, 1);
         ebx20 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x6e));
         eax21 = boundedRand(ecx, 10, 0xc8, 1, edi8, esi9, ebx10, eax19, ecx, ecx, 10, 0xc8, 1, edi8, esi9, ebx10, eax19, ecx);
         eax22 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 18)) - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14));
@@ -58657,7 +58666,7 @@ void** initializeMountainGoat(void** ecx, void** a2, void** a3, int32_t a4, stru
         *reinterpret_cast<int16_t*>(&v24) = *reinterpret_cast<int16_t*>(&ebx23);
     } else {
         if (eax19 == 1) {
-            fun_43dc96(ecx, 2);
+            handleMountainGoatAnimation(ecx, 2);
             ebx25 = reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x72));
             eax26 = boundedRand(ecx, 10, 0xc8, 1, edi8, esi9, ebx10, eax19, ecx, ecx, 10, 0xc8, 1, edi8, esi9, ebx10, eax19, ecx);
             ebx27 = ebx25 + reinterpret_cast<unsigned char>(eax26);
@@ -77493,7 +77502,7 @@ void** output(void** a1, struct s0* a2, void* a3) {
 }
 
 // seems to be related to displaying images, including faces, backgrounds/the sky, maybe the background/guidebook composites?
-// seems to serve a vague "do we have this image already" purpose
+// seems to serve a vague "do we have memory for this image already" purpose
 void** fun_4ce800(void** ecx, void** imageID, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10, void** a11, void** a12, ...) {
     void** eax13;
     void** eax14;
@@ -90792,52 +90801,53 @@ void fun_43cdcc(void** ecx, void** buffer, void** numBytes) {
     return;
 }
 
-// Related to animation(?) of hunting animals
-void fun_43d2c6(void** ecx, int32_t a2) {
-    int32_t v3;
-    int32_t v4;
+// Related to animation(?) of animals that leap(?): bears, rabbits, moose -- the animal groups match what we initialized
+// (All of these are most likely class methods)
+void handleBearMooseRabbitAnimation(void** ecx, int32_t spriteState) {
+    int32_t animationDelay;
+    int32_t animationSpeed;
     void** eax5;
 
-    *reinterpret_cast<int16_t*>(&v3) = -1; // the delay, here there isn't one
-    *reinterpret_cast<int16_t*>(&v4) = -1;
-    switch (a2) {
+    *reinterpret_cast<int16_t*>(&animationDelay) = -1; // the animation delay, here this does not get changed
+    *reinterpret_cast<int16_t*>(&animationSpeed) = -1; // speed of repeating animation
+    switch (spriteState) {
     case 0:
-        *reinterpret_cast<int16_t*>(&v4) = 4;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 4;
         break;
-    case 1:
+    case 1: // Coming in from the left
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 2:
+    case 2: // Coming in from the right
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 3:
+    case 3: // for startled animals?
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
-        *reinterpret_cast<int16_t*>(&v4) = 1;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
         break;
-    case 4:
+    case 4: // for startled animals after the first shot
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
-        *reinterpret_cast<int16_t*>(&v4) = 1;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
         break;
-    case 5:
+    case 5: // states do not apply to this animal
     case 6:
         break;
-    case 7:
-        *reinterpret_cast<int16_t*>(&v4) = 2;
+    case 7: 
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 2;
     }
-    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4))) {
+    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed))) {
         eax5 = *reinterpret_cast<void***>(ecx);
-        fun_453ee0(ecx, v4, v3);
+        fun_453ee0(ecx, animationSpeed, animationDelay);
     }
     return;
 }
 
-// shot in the dark: this feels like it does coords stuff? called in hunting, rafting
+// does animation (or sprite?) coords stuff? called in hunting, rafting. a2 seems to be y pos, a3 x pos
 void fun_49527f(void** ecx, void** a2, void** a3) {
     void** v4;
     void** v5;
@@ -90874,10 +90884,10 @@ void fun_49527f(void** ecx, void** a2, void** a3) {
     return;
 }
 
-// Related to animation of hunting animals
-void fun_43d8f6(void** ecx, void** a2) {
-    int32_t v3;
-    int32_t v4;
+// Related to animation of buffalo, deer, pronghorns, elk
+void handleBuffaloDeerPronghornElkAnimation(void** ecx, void** spriteState) {
+    int32_t animationDelay;
+    int32_t animationSpeed;
     void** edi5;
     void** esi6;
     void** ebx7;
@@ -90888,103 +90898,103 @@ void fun_43d8f6(void** ecx, void** a2) {
     void** eax12;
     void** eax13;
 
-    *reinterpret_cast<int16_t*>(&v3) = -1; // v3 will be the "delay" of the first (and other?) animals
-    *reinterpret_cast<int16_t*>(&v4) = -1;
-    switch (a2) { // Generally these are random rolls
+    *reinterpret_cast<int16_t*>(&animationDelay) = -1; // the "delay" of the first (and other?) animals
+    *reinterpret_cast<int16_t*>(&animationSpeed) = -1;
+    switch (spriteState) {
     case 0:
-        *reinterpret_cast<int16_t*>(&v4) = 5;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 5;
         break;
-    case 1: // From the right
+    case 1: // Coming in from the left
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         eax8 = boundedRand(ecx, 0, 8, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax8);
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax8);
         break;
-    case 2: // From the left
+    case 2: // Coming in from the right
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
         eax9 = boundedRand(ecx, 0, 8, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax9);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax9);
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 3: // Buffalo stampede from the right
+    case 3: // Buffalo stampede from the left
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
-        *reinterpret_cast<int16_t*>(&v4) = 1; // 0 would be the "idle"/non-startled state
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
         eax10 = boundedRand(ecx, 0, 3, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax10);
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax10);
         break;
-    case 4: // Buffalo stampede from the left
+    case 4: // Buffalo stampede from the right
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
-        *reinterpret_cast<int16_t*>(&v4) = 1;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
         eax11 = boundedRand(ecx, 0, 3, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax11);
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax11);
         break;
-    case 5:
-        *reinterpret_cast<int16_t*>(&v4) = 4;
+    case 5: // one of these may be when the deer/etc walk in then stop?
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 4;
         break;
-    case 6:
+    case 6: // and/or if they will bolt if you shoot? somehow? maybe?
         if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x78))) == 10 || (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x78))) == 20 || static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 0x78))) == 30)) {
-            *reinterpret_cast<int16_t*>(&v4) = 6;
+            *reinterpret_cast<int16_t*>(&animationSpeed) = 6;
             eax12 = boundedRand(ecx, 30, 70, 1, edi5, esi6, ebx7, a2, ecx);
-            *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax12);
+            *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax12);
         }
         break;
     case 7: 
-        *reinterpret_cast<int16_t*>(&v4) = 2;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 2;
     }
-    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4))) {
+    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed))) {
         eax13 = *reinterpret_cast<void***>(ecx);
-        fun_453ee0(ecx, v4, v3);
+        fun_453ee0(ecx, animationSpeed, animationDelay);
     }
     return;
 }
 
-// hunting related
-void fun_43dc96(void** ecx, int32_t a2) {
-    int32_t v3;
-    int32_t v4;
+// handles hunting animation vars for I'm pretty sure only mountain goats
+void handleMountainGoatAnimation(void** ecx, int32_t spriteState) {
+    int32_t animationDelay;
+    int32_t animationSpeed;
     void** eax5;
 
-    *reinterpret_cast<int16_t*>(&v3) = -1; // the delay, here there is none
-    *reinterpret_cast<int16_t*>(&v4) = -1;
-    switch (a2) {
+    *reinterpret_cast<int16_t*>(&animationDelay) = -1; // the delay, here there is none (but is this accurate?)
+    *reinterpret_cast<int16_t*>(&animationSpeed) = -1;
+    switch (spriteState) {
     case 0:
-        *reinterpret_cast<int16_t*>(&v4) = 4;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 4;
         break;
     case 1:
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
     case 2:
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 3:
+    case 3: // states that do not apply
     case 4:
     case 6:
         break;
     case 5:
-        *reinterpret_cast<int16_t*>(&v4) = 3;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 3;
         break;
     case 7:
-        *reinterpret_cast<int16_t*>(&v4) = 1;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
     }
-    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4))) {
+    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed))) {
         eax5 = *reinterpret_cast<void***>(ecx);
-        *reinterpret_cast<void***>(eax5 + 48)(ecx, v4, v3);
+        *reinterpret_cast<void***>(eax5 + 48)(ecx, animationSpeed, animationDelay); // I assume fun_453ee0
     }
     return;
 }
 
-// Related to animation(?) of hunting animals
-void fun_43e027(void** ecx, void** a2) {
-    int32_t v3;
-    int32_t v4;
+// Related to animation of hunting ducks and geese only (not other animals, not on the main screen also it seems)
+void handleDuckGooseAnimation(void** ecx, void** spriteState) {
+    int32_t animationDelay;
+    int32_t animationSpeed;
     void** edi5;
     void** esi6;
     void** ebx7;
@@ -90992,44 +91002,44 @@ void fun_43e027(void** ecx, void** a2) {
     void** eax9;
     void** eax10;
 
-    *reinterpret_cast<int16_t*>(&v3) = -1;
-    *reinterpret_cast<int16_t*>(&v4) = -1;
-    switch (a2) {
-    case 0:
-        *reinterpret_cast<int16_t*>(&v4) = 2;
-    case 3:
+    *reinterpret_cast<int16_t*>(&animationDelay) = -1; // Animation delay of start, which CAN get changed here
+    *reinterpret_cast<int16_t*>(&animationSpeed) = -1; // Speed of animation
+    switch (spriteState) {
+    case 0: 
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 2;
+    case 3: // states do not apply, bird animations are simple and unchanging
     case 4:
     case 5:
     case 6:
         break;
-    case 1:
+    case 1: // Initial; flying in from the left
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
         eax8 = boundedRand(ecx, 0, 5, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax8);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax8);
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 2:
+    case 2: // Initial; flying in from the right
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
         eax9 = boundedRand(ecx, 0, 5, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax9);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax9);
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 7:
-        *reinterpret_cast<int16_t*>(&v4) = 1;
+    case 7: 
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
     }
-    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4))) {
+    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed))) {
         eax10 = *reinterpret_cast<void***>(ecx);
-        fun_453ee0(ecx, v4, v3);
+        fun_453ee0(ecx, animationSpeed, animationDelay);
     }
     return;
 }
 
-// hunting stuff
-void fun_43e43e(void** ecx, void** a2) {
-    int32_t v3;
-    int32_t v4;
+// hunting animation related, seems to happen when a squirrel or ground squirrel jumps
+void handleSquirrelAnimation(void** ecx, void** spriteState) {
+    int32_t animationDelay;
+    int32_t animationSpeed;
     void** edi5;
     void** esi6;
     void** ebx7;
@@ -91037,37 +91047,37 @@ void fun_43e43e(void** ecx, void** a2) {
     void** eax9;
     void** eax10;
 
-    *reinterpret_cast<int16_t*>(&v3) = -1; // The delay
-    *reinterpret_cast<int16_t*>(&v4) = -1;
-    switch (a2) {
+    *reinterpret_cast<int16_t*>(&animationDelay) = -1; // Animation delay/speed of start; can be changed
+    *reinterpret_cast<int16_t*>(&animationSpeed) = -1; // Duration of animation -- lower >= 0 is faster
+    switch (spriteState) {
     case 0:
-        *reinterpret_cast<int16_t*>(&v4) = 3;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 3;
         break;
     case 1:
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(1);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(0);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         eax8 = boundedRand(ecx, 2, 6, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax8);
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax8);
         break;
     case 2:
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0xffff);
         *reinterpret_cast<void***>(ecx + 32) = reinterpret_cast<void**>(1);
         eax9 = boundedRand(ecx, 2, 6, 1, edi5, esi6, ebx7, a2, ecx);
-        *reinterpret_cast<int16_t*>(&v3) = *reinterpret_cast<int16_t*>(&eax9);
-        *reinterpret_cast<int16_t*>(&v4) = 0;
+        *reinterpret_cast<int16_t*>(&animationDelay) = *reinterpret_cast<int16_t*>(&eax9);
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 0;
         break;
-    case 3:
+    case 3: // states do not apply, squirrels don't have much odd behavior
     case 4:
     case 5:
     case 6:
         break;
     case 7:
-        *reinterpret_cast<int16_t*>(&v4) = 1;
+        *reinterpret_cast<int16_t*>(&animationSpeed) = 1;
     }
-    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&v4))) {
+    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed)) >= 0 && static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) != static_cast<int32_t>(*reinterpret_cast<int16_t*>(&animationSpeed))) {
         eax10 = *reinterpret_cast<void***>(ecx);
-        fun_453ee0(ecx, v4, v3);
+        fun_453ee0(ecx, animationSpeed, animationDelay);
     }
     return;
 }
@@ -107892,8 +107902,9 @@ struct s258 {
     int32_t f40;
 };
 
-// fires when you "shoot" (click on) an animal; checks for hitboxes, checks sharpshooting; a2 (see also v2 in this) is ebp - 0x28 offset
-void** fun_4a4046(void** ecx, void** a2, void** a3) {
+// fires when you "shoot" (click on) an area of the map; checks for hitboxes, checks sharpshooting; a2 (see also v2 in this) is ebp - 0x28 offset
+// unlike handleHuntingSceneEvent this does not fire on cursor movement or clicking non-scene buttons, etc.
+void** handleHuntingSceneShot(void** ecx, void** a2, void** a3) {
     uint64_t v2;
     void* esp3;
     void* ebp4;
@@ -107968,21 +107979,21 @@ void** fun_4a4046(void** ecx, void** a2, void** a3) {
     ecx27 = v24;
     al28 = fun_47f823(ecx27, *reinterpret_cast<int16_t*>(&v26), *reinterpret_cast<int16_t*>(&v25));
     eax29 = 0;
-    *reinterpret_cast<signed char*>(&eax29) = al28;
+    *reinterpret_cast<signed char*>(&eax29) = al28; // process animals in scene similarly to handleHuntingSceneEvent
     if (!eax29 || (eax30 = 0, *reinterpret_cast<signed char*>(&eax30) = al28, eax30 == 0xff)) {
         v31 = 0;
-        while (ecx27 = reinterpret_cast<void**>(static_cast<int32_t>(v31)), reinterpret_cast<signed char>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(v13 + 0xb2))) > reinterpret_cast<signed char>(ecx27)) { // iterate over all animals in the scene
+        while (ecx27 = reinterpret_cast<void**>(static_cast<int32_t>(v31)), reinterpret_cast<signed char>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(v13 + 0xb2))) > reinterpret_cast<signed char>(ecx27)) { // iterate over all animals for the scene, on screen or not
             v32 = reinterpret_cast<void**>(&(*reinterpret_cast<struct s256**>(reinterpret_cast<uint32_t>(v13 + v31 * 4) + 0x66))->f12);
-            if (!*reinterpret_cast<void***>(v32 + 16)) {
+            if (!*reinterpret_cast<void***>(v32 + 16)) { // this seems to be always 1 so maybe a validity check?
                 AnimalNotShot:
             } else {
                 ecx33 = 0;
                 *reinterpret_cast<signed char*>(&ecx33) = (*reinterpret_cast<struct s257**>(reinterpret_cast<uint32_t>(v13 + v31 * 4) + 0x66))->f140; // 0x8c: whether the animal is alive
-                if (!ecx33) // don't do the successful shooting checks if the animal has already died
+                if (!ecx33) // don't do the successful shooting checks if the animal has already died or gone off screen
                     goto AnimalNotShot; else 
                     goto CheckHitbox;
             }
-            v31 = reinterpret_cast<int16_t>(v31 + 1);
+            v31 = reinterpret_cast<int16_t>(v31 + 1); // move on to next animal
             continue;
             CheckHitbox: // if we're here presumably the animal is alive and we hit it
             ecx34 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(ebp4) + 0xffffffe8);
@@ -108017,7 +108028,7 @@ void** fun_4a4046(void** ecx, void** a2, void** a3) {
         }
         goto addr_4a42df_28;
     } else {
-        addr_4a42df_28:
+        addr_4a42df_28: // cleanup/pointer adjustment stuff?
         fun_4a4302(ecx27);
         fun_4a430b(ecx27);
         goto addr_4a431e_29;
@@ -108026,9 +108037,9 @@ void** fun_4a4046(void** ecx, void** a2, void** a3) {
     v45 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(ebp4) + 8);
     edx46 = **reinterpret_cast<struct s258***>(reinterpret_cast<uint32_t>(v13 + v31 * 4) + 0x66);
     ecx27 = *reinterpret_cast<void***>(reinterpret_cast<uint32_t>(v13 + v31 * 4) + 0x66);
-    al47 = fun_49557a(ecx27, v45); // Check hitbox stuff
+    al47 = fun_49557a(ecx27, v45); // handle some hitbox stuff, returns true on successful shot possibly?
     if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(v13 + 0xba)) == 2) { // If you are using a shotgun
-        ecx27 = v13;
+        ecx27 = v13; // since shotguns have drift I guess this is checking whether your shot was centered and/or animal was small?
         v14 = *reinterpret_cast<void***>(reinterpret_cast<uint32_t>(ecx27 + v31 * 4) + 0x66);
         eax48 = 0;
         *reinterpret_cast<signed char*>(&eax48) = al47;
@@ -108042,7 +108053,7 @@ void** fun_4a4046(void** ecx, void** a2, void** a3) {
     if (!eax49) {
         addr_4a42d5_33:
         goto addr_4a42df_28;
-    } else {
+    } else { // Not using a shotgun
         v14 = *reinterpret_cast<void***>(reinterpret_cast<uint32_t>(v13 + v31 * 4) + 0x66);
         eax50 = loadGameSimulationData(v13, v45, v11, v9, v7, v13);
         ecx27 = reinterpret_cast<void**>(0);
@@ -108050,7 +108061,7 @@ void** fun_4a4046(void** ecx, void** a2, void** a3) {
         if (ecx27) 
             goto addr_4a427f_38;
     }
-    eax51 = v52 - v53;
+    eax51 = v52 - v53; // ebp - 0x12 minus ebp - 0x16
     __asm__("cdq ");
     ecx27 = reinterpret_cast<void**>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(reinterpret_cast<int32_t>(&v2) + 2)));
     if (reinterpret_cast<signed char>((*reinterpret_cast<int16_t*>(&eax51) - reinterpret_cast<int32_t>(edx46) >> 1) + reinterpret_cast<uint32_t>(static_cast<int32_t>(v54))) > reinterpret_cast<signed char>(ecx27)) 
@@ -108078,12 +108089,12 @@ void removeAllAnimalsInScene(void** ecx) {
     while (static_cast<int32_t>(*reinterpret_cast<int16_t*>(v2 + 0xb2)) > static_cast<int32_t>(v3)) { // While we have animals in the scene
         if (*reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v2 + v3 * 4) + 0x66)) {
             ecx4 = *reinterpret_cast<struct s91**>(reinterpret_cast<uint32_t>(v2 + v3 * 4) + 0x66);
-            removeAnimal(ecx4, 1); // Call destructor on the animal
+            removeAnimal(ecx4, 1); // Call destructor on the animal obj
             *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v2 + v3 * 4) + 0x66) = 0;
         }
         v3 = reinterpret_cast<int16_t>(v3 + 1);
     }
-    *reinterpret_cast<int16_t*>(v2 + 0xb2) = 0; // Now we have none
+    *reinterpret_cast<int16_t*>(v2 + 0xb2) = 0; // Clear out
     return;
 }
 
@@ -132906,7 +132917,7 @@ void fun_4d998c(void** ecx) {
     return;
 }
 
-// hunting related
+// hunting related, seems to fire upon general frames and/or mouse events passing
 void fun_4d9a22(void** ecx, void** a2, void** a3) {
     void** ecx4;
     void** edi5;
@@ -133070,7 +133081,7 @@ void fun_4d9a22(void** ecx, void** a2, void** a3) {
             goto addr_4d9cba_39;
     } else {
         eax38 = *reinterpret_cast<void***>(ecx);
-        *reinterpret_cast<void***>(eax38 + 64)(ecx, 7);
+        *reinterpret_cast<void***>(eax38 + 64)(ecx, 7); // possibilities: handleDuckGooseAnimation
         *reinterpret_cast<void***>(ecx + 0x90) = reinterpret_cast<void**>(0);
     }
     addr_4d9d9f_37:
@@ -136263,7 +136274,7 @@ void** fun_4a3be0(void** ecx, void** a2, void** a3, void** a4, void** a5, signed
     initializeEightBytesToZero(v24 + 0xa6, v22, v20, v18, v24, v26, v27, v28, v29, v30, v31, v17, fun_4a3e9e, 0, v13);
     *reinterpret_cast<void***>(v24) = reinterpret_cast<void**>(0x4ebf28);
     *reinterpret_cast<int16_t*>(&v32) = 10;
-    *reinterpret_cast<int16_t*>(v24 + 0xb2) = 0;
+    *reinterpret_cast<int16_t*>(v24 + 0xb2) = 0; // Animals in the scene. This is set once, upon loading a scene, persists even after they leave the screen -- waiting around in the scene will not spawn more and will not destruct their objects yet
     *reinterpret_cast<int16_t*>(v24 + 0xbe) = 0;
     *reinterpret_cast<int16_t*>(v24 + 0xb6) = 0;
     *reinterpret_cast<int16_t*>(v24 + 0xbc) = 20; // # of bullets
@@ -136283,7 +136294,7 @@ void** fun_4a3be0(void** ecx, void** a2, void** a3, void** a4, void** a5, signed
         *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v24 + *reinterpret_cast<int16_t*>(&v33) * 4) + 0xc2) = 0;
         *reinterpret_cast<int16_t*>(&v33) = reinterpret_cast<int16_t>(*reinterpret_cast<int16_t*>(&v33) + 1);
     }
-    *reinterpret_cast<void***>(v24 + 0xce) = reinterpret_cast<void**>(0);
+    *reinterpret_cast<void***>(v24 + 0xce) = reinterpret_cast<void**>(0); // Stored gunshot sound ID 
     *reinterpret_cast<void***>(v24 + 0xd2) = reinterpret_cast<void**>(0);
     ecx34 = *reinterpret_cast<void***>(v24 + 70);
     eax39 = fun_4669f0(ecx34, ebp15 + 0xffffffe4, v22, v20, v18, v24, v35, v36, v37, v38, v33, v32, v17, fun_4a3e9e, 1, v13, v11);
@@ -136762,6 +136773,7 @@ void fun_4728a0(struct s363* a1, struct s364* a2, struct s365* a3, struct s366* 
     return;
 }
 
+// called during hunting click processing
 signed char fun_47f823(void** ecx, int16_t a2, int16_t a3) {
     int32_t eax4;
     void** edx5;
@@ -144454,7 +144466,7 @@ struct s462 {
     unsigned char f134744072;
 };
 
-// switch case mapping for bear or rabbit IDs
+// switch case mapping for bear or rabbit IDs (which have been adjusted already so the below numbers are not actually the ids)
 // 0 => 0; 10 => 1; 20 => 2; 30 => 3; 40 => 4; 140 => 5; 150 => 6; 160 => 7; all else 8
 void mapBearMooseRabbitIDSwitchCases(int32_t ecx) {
     unsigned char* eax2;
@@ -165374,7 +165386,7 @@ int16_t fun_441a5f(struct s964* ecx, int16_t a2) {
     return 0;
 }
 
-// related to playing sounds, not just music; a2 is a sound ID after mask/offset applied
+// related to playing sounds, not just music; seems to get ref to location for sound ID? a2 is a sound ID after mask/offset applied
 void** fun_441c52(void** ecx, void** soundID, void** a3, void** a4, void** a5, void** a6, void** a7, void** a8, void** a9, void** a10) {
     void** v11;
     void** v12;
@@ -165413,7 +165425,7 @@ void** fun_441c52(void** ecx, void** soundID, void** a3, void** a4, void** a5, v
     v22 = eax21;
     if (!*reinterpret_cast<void***>(v20 + 18)) {
         addr_441d44_2:
-    } else {
+    } else { // maybe finding existing memory? (vague yes)
         v23 = reinterpret_cast<void**>(reinterpret_cast<unsigned char>(*reinterpret_cast<void***>(*reinterpret_cast<void***>(v20 + 18) + 8)) >> 2);
         if (reinterpret_cast<signed char>(v23) <= reinterpret_cast<signed char>(0)) 
             goto addr_441d32_5; else 
@@ -182354,11 +182366,11 @@ void fun_4b79b9(void** ecx, void** a2, void** a3, void** a4, void** a5, void** a
                     edx457 = *(*reinterpret_cast<struct s1460**>(ebp458 - 0xe0))->f218;
                     ecx459 = (*reinterpret_cast<struct s1461**>(ebp460 - 0xe0))->f218;
                     fun_46679d(ecx459, v455, v453, 0, 0, 0);
-                    v461 = *reinterpret_cast<void***>(ebp462 - 0x80);
-                    v463 = *reinterpret_cast<void***>(ebp464 - 72);
+                    v461 = *reinterpret_cast<void***>(ebp462 - 0x80); // x position of raft?
+                    v463 = *reinterpret_cast<void***>(ebp464 - 72); // y position?
                     eax465 = **reinterpret_cast<struct s1462***>(ebp466 - 0xe0);
                     ecx467 = *reinterpret_cast<int32_t*>(ebp468 - 0xe0);
-                    fun_49527f(ecx467, v463, v461, v455, v453, 0, 0, 0);
+                    fun_49527f(ecx467, v463, v461, v455, v453, 0, 0, 0); // Probably the raft tipping animation at these coords
                     v469 = reinterpret_cast<void**>(reinterpret_cast<int32_t>(ebp470) + 0xffffff58);
                     eax471 = **reinterpret_cast<struct s1463***>(ebp472 - 0xe0);
                     ecx473 = *reinterpret_cast<int32_t*>(ebp474 - 0xe0);
@@ -191147,7 +191159,7 @@ void fun_416a06(struct s1544* ecx) {
     v2 = ecx->f64->f12;
     while (v2) {
         eax3 = v2->f0;
-        eax3->f28(v2); // possibilities: fun_43d866 (hunting?), fun_4b79b9 (rafting?), fun_43e3ea (also hunting?)
+        eax3->f28(v2); // possibilities: fun_43d866 (hunting? leads to 43d8f6), fun_4b79b9 (rafting?), fun_43e3ea (also hunting?)
         v2 = v2->f8;
     }
     return;
@@ -201154,8 +201166,8 @@ struct s1659 {
     int32_t f64;
 };
 
-// handes the clicking of hotspots on hunting screen, ecx is that screen
-void fun_4a432f(void** ecx, void** a2, void** a3) {
+// handes the processing of events on hunting screen (and possibly clicking/shooting), can run upon cursor move, ecx is that screen
+void handleHuntingSceneEvent(void** ecx, void** a2, void** a3) {
     void*** esp4;
     void** eax5;
     void** esp6;
@@ -201259,7 +201271,7 @@ void fun_4a432f(void** ecx, void** a2, void** a3) {
                 if (!reinterpret_cast<int1_t>(eax34 == 1)) { // if you did anything but click, such as just move your cursor in the hunting window
                     addr_4a4690_11:
                     *reinterpret_cast<void***>(a2 + 20) = reinterpret_cast<void**>(1);
-                    goto addr_4a469c_12;
+                    goto addr_4a469c_12; // leads to early return after cleanup
                 } else { // if you clicked
                     eax35 = fun_49459e(a2, esp4 + 0xffffffd4);
                     ecx36 = reinterpret_cast<void**>(esp4 + 0xfffffff0);
@@ -201270,10 +201282,10 @@ void fun_4a432f(void** ecx, void** a2, void** a3) {
                     *reinterpret_cast<signed char*>(&ecx43) = *reinterpret_cast<signed char*>(v8 + 0xae);
                     if (!ecx43 || !*reinterpret_cast<int16_t*>(v8 + 0xbc)) { // If the gun isn't loaded or there are no bullets left
                         ecx9 = v8;
-                        fun_4a5ce1(ecx9, 2); // empty gun sound
+                        playHuntingSound(ecx9, 2); // empty gun sound
                         goto addr_4a4690_11;
                     } else {
-                        fun_4a5ce1(v8, 0); // pistol (or gun) sound?
+                        playHuntingSound(v8, 0); // pistol (or gun) sound?
                         *reinterpret_cast<signed char*>(v8 + 0xae) = 0; // unload the gun
                         *reinterpret_cast<int16_t*>(v8 + 0xb6) = reinterpret_cast<int16_t>(*reinterpret_cast<int16_t*>(v8 + 0xb6) + 1); // 1 more shot left?
                         *reinterpret_cast<int16_t*>(v8 + 0xbc) = reinterpret_cast<int16_t>(*reinterpret_cast<int16_t*>(v8 + 0xbc) - 1); // 1 fewer bullet?
@@ -201282,11 +201294,11 @@ void fun_4a432f(void** ecx, void** a2, void** a3) {
                         v51 = reinterpret_cast<void**>(esp4 + 0xffffffd8);
                         v52 = reinterpret_cast<void**>(reinterpret_cast<uint32_t>(esp6 - 52) - 4 - 4 - 4 - 4 + 4 - 4 + 4 - 4 - 4 + 4 + 4 - 4 - 4 + 4 + 4 - 4 + 4 - 4 - 4 + 4 + 4 - 4 - 4 + 4 + 4 - 4 - 4 - 4 - 4 + 12 + 4 - 4 - 4 + 4 + 4 - 4 - 4); // this seems wrong.
                         fun_4a3a1a(v52, esp4 + 0xfffffff0, 0x4a4443, v51, edi10, esi11, ebx12, v23, v8, v53, v54, v52); // 4a4443:lea eax, [ebp-0x28]
-                        eax55 = fun_4a4046(v8, 0x4a4443, v51); 
+                        eax55 = handleHuntingSceneShot(v8, 0x4a4443, v51); 
                         if (!eax55) {
-                            if (static_cast<int32_t>(v56) < 0xaa) // v56: 0xfffffff0
+                            if (static_cast<int32_t>(v56) < 0xaa) // related to shot deviation I think; v56: 0xfffffff0
                                 goto addr_4a4575_18; else 
-                                goto addr_4a44fd_19;
+                                goto addr_4a44fd_19; // this will play a different sound and then go to addr_4a4575_18
                         } else {
                             baseGunDamage = *reinterpret_cast<int16_t*>(*reinterpret_cast<int16_t*>(v8 + 0xba) * 2 + 0x500628); // Look up damage per gun with offset
                             eax58 = *reinterpret_cast<void***>(eax55); // Those damage numbers: 10 shotgun, 25 pistol, 80 rifle.
@@ -201307,50 +201319,50 @@ void fun_4a432f(void** ecx, void** a2, void** a3) {
     fun_4a4757(ecx9);
     g0 = *reinterpret_cast<void***>(reinterpret_cast<int32_t>(&v7) + 2);
     return;
-    addr_4a469c_12:
+    addr_4a469c_12: // if you did something other than click, like moving cursor, return
     goto addr_4a4734_25;
-    addr_4a4575_18:
-    ecx9 = reinterpret_cast<void**>(0);
+    addr_4a4575_18: // iterate over animals same way you do in handleHuntingSceneShot
+    ecx9 = reinterpret_cast<void**>(0); // 
     *reinterpret_cast<signed char*>(&ecx9) = *reinterpret_cast<signed char*>(v8 + 0xc1); // the buffalo stampede flag
     if (!ecx9) {
         v60 = 0;
-        while (ecx9 = reinterpret_cast<void**>(static_cast<int32_t>(v60)), reinterpret_cast<signed char>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(v8 + 0xb2))) > reinterpret_cast<signed char>(ecx9)) { // iterate over all animals in scene?
+        while (ecx9 = reinterpret_cast<void**>(static_cast<int32_t>(v60)), reinterpret_cast<signed char>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(v8 + 0xb2))) > reinterpret_cast<signed char>(ecx9)) { // iterate over all animals in scene 
             v61 = reinterpret_cast<struct s1653*>(reinterpret_cast<int32_t>(*reinterpret_cast<void**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66)) + 12);
-            if (!v61->f16) {
-                addr_4a468b_31:
+            if (!v61->f16) { // this seems to be always 1 so maybe a validity check?
+                OtherAnimalNotShot: 
             } else {
                 ecx62 = 0;
-                *reinterpret_cast<signed char*>(&ecx62) = (*reinterpret_cast<struct s1654**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66))->f140; // 0x8c slash animal being alive?
-                if (!ecx62) // if the animal is dead
-                    goto addr_4a468b_31; else 
-                    goto addr_4a45f2_34;
+                *reinterpret_cast<signed char*>(&ecx62) = (*reinterpret_cast<struct s1654**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66))->f140; // 0x8c slash animal being alive and on screen?
+                if (!ecx62) // if the animal is dead or offscreen
+                    goto OtherAnimalNotShot; else 
+                    goto UpdateAnimalAnimationsAfterShot;
             }
             v60 = reinterpret_cast<int16_t>(v60 + 1);
             continue;
-            addr_4a45f2_34:
-            if (static_cast<int32_t>((*reinterpret_cast<struct s1655**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66))->f144) == 1) // + 0x90, seems related to idle/startled state?
+            UpdateAnimalAnimationsAfterShot:
+            if (static_cast<int32_t>((*reinterpret_cast<struct s1655**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66))->f144) == 1) // + 0x90 -- it becomes 1 (from -1) in the stuff for being startled
                 goto addr_4a4612_37;
             edx63 = **reinterpret_cast<struct s1656***>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66);
             ecx64 = *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66);
-            fun_43e027(ecx64, 4);
+            edx63->f64(ecx64, 4); // Possibilities: handleDuckGooseAnimation (ducks/geese only? if so nothing happens), handleBuffaloDeerPronghornElkAnimation, handleBearMooseRabbitAnimation (rabbits etc)
             addr_4a4651_39:
             v65 = *reinterpret_cast<struct s1657**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66);
             v65->f134 = 1; // 0x86
             v66 = *reinterpret_cast<struct s1658**>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66);
             v66->f62 = 0; // 0x3e
-            goto addr_4a468b_31;
+            goto OtherAnimalNotShot;
             addr_4a4612_37:
             edx67 = **reinterpret_cast<struct s1659***>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66);
             ecx68 = *reinterpret_cast<int32_t*>(reinterpret_cast<uint32_t>(v8 + v60 * 4) + 0x66);
-            fun_43d2c6(ecx68, 3);
+            edx67->f64(ecx68, 3); // possibilities: handleBearMooseRabbitAnimation (rabbits), handleDuckGooseAnimation (ducks/geese), etc
             goto addr_4a4651_39;
         }
         goto addr_4a4690_11;
     }
     addr_4a44fd_19:
     eax69 = boundedRand(v8, 0, 10, 1, edi10, esi11, ebx12, v23, v8);
-    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax69)) < 3) {
-        fun_4a5ce1(v8, 1); // probably the weird gun sound? it is probably supposed to signify something meaningful but fuck if I know that
+    if (static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax69)) < 3) { // 30% chance of playing...
+        playHuntingSound(v8, 1); // the weird gun sound? if your shot deviated a lot?
     }
     edx70 = *reinterpret_cast<void***>(*reinterpret_cast<void***>(v8 + 0xa2));
     ecx71 = *reinterpret_cast<void***>(v8 + 0xa2);
@@ -208581,7 +208593,7 @@ void fun_43d2ab() {
     goto __CxxFrameHandler;
 }
 
-// hunting related; these seem to fire when a new animal spawns/completes animation loop?
+// hunting related; these seem to fire when a new animal spawns/completes animation loop? seems to happen for deer/rabbits/etc only?
 void fun_43d866(void** ecx) {
     void** edi2;
     void** esi3;
@@ -208594,15 +208606,15 @@ void fun_43d866(void** ecx) {
 
     fun_4d9a22(ecx, edi2, esi3);
     if (*reinterpret_cast<void***>(ecx + 76)) {
-        if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) == 4 && (eax6 = boundedRand(ecx, 0, 0x9c4, 2, edi2, esi3, ebx4, ecx, ebp5), reinterpret_cast<int1_t>(eax6 == 10))) {
+        if (static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 76))) == 4 && (eax6 = boundedRand(ecx, 0, 0x9c4, 2, edi2, esi3, ebx4, ecx, ebp5), reinterpret_cast<int1_t>(eax6 == 10))) { // it feels like this should pass wayy less than it does, what is randomness
             eax7 = *reinterpret_cast<void***>(ecx);
-            fun_43d8f6(ecx, 6);
+            handleBuffaloDeerPronghornElkAnimation(ecx, 6);
         }
     } else {
         eax8 = boundedRand(ecx, 0, 0x7d0, 2, edi2, esi3, ebx4, ecx, ebp5);
-        if (reinterpret_cast<int1_t>(eax8 == 10)) {
+        if (reinterpret_cast<int1_t>(eax8 == 10)) { // ditto
             eax9 = *reinterpret_cast<void***>(ecx);
-            fun_43d8f6(ecx, 5);
+            handleBuffaloDeerPronghornElkAnimation(ecx, 5);
         }
     }
     return;
@@ -208632,7 +208644,7 @@ void fun_43e3ea(void** ecx) {
     fun_4d9a22(ecx, edi2, esi3);
     if (!*reinterpret_cast<void***>(ecx + 76) && (eax6 = boundedRand(ecx, 0, 0x7d0, 1, edi2, esi3, ebx4, ecx, ebp5), reinterpret_cast<int1_t>(eax6 == 10))) {
         eax7 = *reinterpret_cast<void***>(ecx);
-        *reinterpret_cast<void***>(eax7 + 64)(ecx, 0);
+        *reinterpret_cast<void***>(eax7 + 64)(ecx, 0); // possibilities: handleSquirrelAnimation and possibly the rest
     }
     return;
 }
@@ -217712,10 +217724,10 @@ void handleShotAnimal(struct s1823* ecx, int16_t baseGunDamage) {
         ecx->f140 = 0; // Set health to 0 if you did more damage than the animal's starting health
     }
     ecx4 = 0;
-    *reinterpret_cast<signed char*>(&ecx4) = ecx->f140; // flag whether the animal is alive
-    if (!ecx4) { // if it's dead
+    *reinterpret_cast<signed char*>(&ecx4) = ecx->f140; // flag whether the animal is alive/offscreen
+    if (!ecx4) { // if it's dead/offscreen
         eax5 = ecx->f0;
-        fun_43d2c6(ecx, 7);
+        handleBearMooseRabbitAnimation(ecx, 7);
     }
     return;
 }
@@ -240106,7 +240118,8 @@ struct s2030 {
     struct s349** f50;
 };
 
-// does stuff w/ animal hitboxes when hunting
+// does stuff w/ animal hitboxes when hunting, seems to only be called when you got within the hitbox
+// it seems to be only(?) used for shotgun shot success so the gist is perhaps checking whether your shot was too offcenter taking animal size into account
 signed char fun_49557a(void** ecx, struct s2029* a2) {
     void* esp3;
     void** eax4;
@@ -240183,8 +240196,8 @@ signed char fun_49557a(void** ecx, struct s2029* a2) {
         eax39->f28 = eax43;
     }
     v44 = eax39->f28;
-    eax45 = a2->f2 - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14)); // f2: x min
-    eax46 = a2->f0 - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 12)); // f0: y min
+    eax45 = a2->f2 - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 14)); // how far your shot's x dir was from animal center? (f2: x?)
+    eax46 = a2->f0 - reinterpret_cast<int16_t>(*reinterpret_cast<void***>(ecx + 12)); // similar but for y dir (f0: y)
     v47 = reinterpret_cast<void*>(eax39->f32 * *reinterpret_cast<int16_t*>(&eax46) + *reinterpret_cast<int16_t*>(&eax45));
     ecx48 = reinterpret_cast<struct s349**>(static_cast<int32_t>(*reinterpret_cast<int16_t*>(&eax31)));
     if (*reinterpret_cast<int16_t*>(&eax34) * reinterpret_cast<int32_t>(ecx48) > reinterpret_cast<int32_t>(v47) && (ecx48 = v44, !!*reinterpret_cast<signed char*>(reinterpret_cast<int32_t>(v47) + reinterpret_cast<int32_t>(ecx48)))) {
