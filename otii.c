@@ -107775,10 +107775,10 @@ int16_t spawnAnimalsInSceneWrapper(void** ecx, void** locationID) {
         eax5 = reinterpret_cast<void**>(static_cast<int32_t>(reinterpret_cast<int16_t>(*reinterpret_cast<void***>(&v14))));
         if (reinterpret_cast<uint1_t>(reinterpret_cast<signed char>(eax5) < reinterpret_cast<signed char>(0)) | reinterpret_cast<uint1_t>(eax5 == 0)) // Spawn nothing if that's 0
             goto addr_4a4d76_3; else 
-            goto UbiquitousAnimals;
+            goto SpawnAnimals;
     }
     return *reinterpret_cast<int16_t*>(&eax5);
-    UbiquitousAnimals: // "consolation animals," "last ditch animals," etc.
+    SpawnAnimals: // "consolation animals," "last ditch animals," etc.
     v15 = v14;
     spawnLowMeatAnimal(ecx, *reinterpret_cast<int16_t*>(&v15), locationID + 62); // a3: Beginning of hunting bytes.
     v16 = v14;
@@ -108162,7 +108162,7 @@ void** fun_4d9520(void** ecx, void** a2, void** a3, int16_t a4, struct s87* a5, 
     eax20 = *reinterpret_cast<void***>(eax20 + 0x78);
     v21 = eax20;
     al22 = fun_4d9f20(ecx, *reinterpret_cast<int16_t*>(&v21), edi8, esi9, ebx10); // is it a bear, moose, pronghorn, elk, or duck
-    *reinterpret_cast<signed char*>(&v23) = al22; // not sure why this check exists yet - seems to have to do with the presence of animation sequences? but why only those animals
+    *reinterpret_cast<signed char*>(&v23) = al22; // not sure why this check exists yet - seems to have to do with the presence of animation sequences? but why only those animals -- they don't match any of the groups exactly
     eax24 = 0;
     *reinterpret_cast<signed char*>(&eax24) = *reinterpret_cast<signed char*>(&v23);
     if (eax24 && (*reinterpret_cast<int16_t*>(&v16) = 50, !!*reinterpret_cast<void***>(ecx + 0x7e))) {
